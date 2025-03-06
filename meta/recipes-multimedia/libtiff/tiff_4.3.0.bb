@@ -3,7 +3,7 @@ DESCRIPTION = "Library provides support for the Tag Image File Format \
 (TIFF), a widely used format for storing image data.  This library \
 provide means to easily access and create TIFF image files."
 HOMEPAGE = "http://www.libtiff.org/"
-LICENSE = "BSD-2-Clause"
+LICENSE = "libtiff"
 LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=34da3db46fab7501992f9615d7e158cf"
 
 CVE_PRODUCT = "libtiff"
@@ -32,6 +32,29 @@ SRC_URI = "http://download.osgeo.org/libtiff/tiff-${PV}.tar.gz \
            file://0001-tiffcrop-S-option-Make-decision-simpler.patch \
            file://0001-tiffcrop-disable-incompatibility-of-Z-X-Y-z-options-.patch \
            file://0001-tiffcrop-subroutines-require-a-larger-buffer-fixes-2.patch \
+           file://CVE-2022-48281.patch \
+           file://CVE-2023-0800_0801_0802_0803_0804.patch \
+           file://CVE-2023-0795_0796_0797_0798_0799.patch \
+           file://CVE-2023-25433.patch \
+           file://CVE-2023-25434-CVE-2023-25435.patch \
+           file://CVE-2023-26965.patch \
+           file://CVE-2023-2908.patch \
+           file://CVE-2023-3316.patch \
+           file://CVE-2023-3576.patch \
+           file://CVE-2023-3618.patch \
+           file://CVE-2023-26966.patch \
+           file://CVE-2022-40090.patch \
+           file://CVE-2023-1916.patch \
+           file://CVE-2023-40745.patch \
+           file://CVE-2023-41175.patch \
+           file://CVE-2023-6228.patch \
+           file://CVE-2023-52356.patch \
+           file://CVE-2023-6277-1.patch \
+           file://CVE-2023-6277-2.patch \
+           file://CVE-2023-6277-3.patch \
+           file://CVE-2023-6277-4.patch \
+           file://CVE-2024-7006.patch \
+           file://CVE-2023-3164.patch \
            "
 
 SRC_URI[sha256sum] = "0e46e5acb087ce7d1ac53cf4f56a09b221537fc86dfc5daaad1c2e89e1b37ac8"
@@ -43,8 +66,8 @@ UPSTREAM_CHECK_REGEX = "tiff-(?P<pver>\d+(\.\d+)+).tar"
 # and 4.3.0 doesn't have the issue
 CVE_CHECK_IGNORE += "CVE-2015-7313"
 # These issues only affect libtiff post-4.3.0 but before 4.4.0,
-# caused by 3079627e and fixed by b4e79bfa.
-CVE_CHECK_IGNORE += "CVE-2022-1622 CVE-2022-1623"
+# caused by 3079627e and fixed by b4e79bfa and again by 9be22b63
+CVE_CHECK_IGNORE += "CVE-2022-1622 CVE-2022-1623 CVE-2023-2731"
 # Issue is in jbig which we don't enable
 CVE_CHECK_IGNORE += "CVE-2022-1210"
 

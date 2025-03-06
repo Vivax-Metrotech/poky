@@ -11,12 +11,17 @@ LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://LICENCE;md5=41bfb977e4933c506588724ce69bf5d2"
 
 SRC_URI = "https://github.com/PhilipHazel/pcre2/releases/download/pcre2-${PV}/pcre2-${PV}.tar.bz2 \
+    file://CVE-2022-41409.patch \
 "
 UPSTREAM_CHECK_URI = "https://github.com/PhilipHazel/pcre2/releases"
 
 SRC_URI[sha256sum] = "14e4b83c4783933dc17e964318e6324f7cae1bc75d8f3c79bc6969f00c159d68"
 
 CVE_PRODUCT = "pcre2"
+
+# This CVE is fixed in 10.40
+# NVD wrongly changed <10.40 to =10.40 when adding debian_linux=10.0
+CVE_CHECK_IGNORE += "CVE-2022-1586"
 
 S = "${WORKDIR}/pcre2-${PV}"
 

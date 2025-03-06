@@ -39,6 +39,10 @@ EOF
 
 EXTRA_OECONF += " --disable-valadoc"
 
+# work around for vala-native build with gcc-14 instead of backporting
+# https://gitlab.gnome.org/GNOME/vala/-/commit/23ec71b1a5c4cead3d1bdac82e184d0a63fa7b79
+BUILD_CFLAGS += "-Wno-error=incompatible-pointer-types"
+
 # Vapigen wrapper needs to be available system-wide, because it will be used
 # to build vapi files from all other packages with vala support
 do_install:append:class-target() {
@@ -49,6 +53,9 @@ do_install:append:class-target() {
 # Put vapigen wrapper into target sysroot so that it can be used when building
 # vapi files.
 SYSROOT_DIRS += "${bindir_crossscripts}"
+
+inherit multilib_script
+MULTILIB_SCRIPTS = "${PN}:${bindir}/vala-gen-introspect-0.56"
 
 SYSROOT_PREPROCESS_FUNCS:append:class-target = " vapigen_sysroot_preprocess"
 vapigen_sysroot_preprocess() {
@@ -64,5 +71,5 @@ SSTATE_SCAN_FILES += "vapigen-wrapper"
 PACKAGE_PREPROCESS_FUNCS += "vala_package_preprocess"
 
 vala_package_preprocess () {
-	sed -i -e 's:${RECIPE_SYSROOT}::g;' ${PKGD}${bindir_crossscripts}/vapigen-wrapper
+	rm -rf ${PKGD}${bindir_crossscripts}
 }

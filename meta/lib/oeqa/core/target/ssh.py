@@ -226,26 +226,35 @@ def SSHCall(command, logger, timeout=None, **opts):
     def run():
         nonlocal output
         nonlocal process
+        output_raw = b''
         starttime = time.time()
         process = subprocess.Popen(command, **options)
         if timeout:
             endtime = starttime + timeout
             eof = False
+            os.set_blocking(process.stdout.fileno(), False)
             while time.time() < endtime and not eof:
-                logger.debug('time: %s, endtime: %s' % (time.time(), endtime))
                 try:
+                    logger.debug('Waiting for process output: time: %s, endtime: %s' % (time.time(), endtime))
                     if select.select([process.stdout], [], [], 5)[0] != []:
-                        reader = codecs.getreader('utf-8')(process.stdout, 'ignore')
-                        data = reader.read(1024, 4096)
+                        # wait a bit for more data, tries to avoid reading single characters
+                        time.sleep(0.2)
+                        data = process.stdout.read()
                         if not data:
-                            process.stdout.close()
                             eof = True
                         else:
-                            output += data
-                            logger.debug('Partial data from SSH call:\n%s' % data)
+                            output_raw += data
+                            # ignore errors to capture as much as possible
+                            logger.debug('Partial data from SSH call:\n%s' % data.decode('utf-8', errors='ignore'))
                             endtime = time.time() + timeout
                 except InterruptedError:
+                    logger.debug('InterruptedError')
                     continue
+                except BlockingIOError:
+                    logger.debug('BlockingIOError')
+                    continue
+
+            process.stdout.close()
 
             # process hasn't returned yet
             if not eof:
@@ -254,16 +263,32 @@ def SSHCall(command, logger, timeout=None, **opts):
                 try:
                     process.kill()
                 except OSError:
+                    logger.debug('OSError when killing process')
                     pass
                 endtime = time.time() - starttime
                 lastline = ("\nProcess killed - no output for %d seconds. Total"
                             " running time: %d seconds." % (timeout, endtime))
                 logger.debug('Received data from SSH call:\n%s ' % lastline)
                 output += lastline
+                process.wait()
 
         else:
-            output = process.communicate()[0].decode('utf-8', errors='ignore')
-            logger.debug('Data from SSH call:\n%s' % output.rstrip())
+            output_raw = process.communicate()[0]
+
+        output = output_raw.decode('utf-8', errors='ignore')
+        logger.debug('Data from SSH call:\n%s' % output.rstrip())
+
+        # timout or not, make sure process exits and is not hanging
+        if process.returncode == None:
+            try:
+                process.wait(timeout=5)
+            except TimeoutExpired:
+                try:
+                    process.kill()
+                except OSError:
+                    logger.debug('OSError')
+                    pass
+                process.wait()
 
     options = {
         "stdout": subprocess.PIPE,
@@ -290,6 +315,9 @@ def SSHCall(command, logger, timeout=None, **opts):
         # whilst running and ensure we don't leave a process behind.
         if process.poll() is None:
             process.kill()
+        if process.returncode == None:
+            process.wait()
         logger.debug('Something went wrong, killing SSH process')
         raise
-    return (process.wait(), output.rstrip())
+
+    return (process.returncode, output.rstrip())

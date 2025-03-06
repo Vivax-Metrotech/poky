@@ -262,7 +262,7 @@ def files_from_filevars(filevars):
             f = '.' + f
         if not f.startswith("./"):
             f = './' + f
-        globbed = glob.glob(f)
+        globbed = glob.glob(f, recursive=True)
         if globbed:
             if [ f ] != globbed:
                 files += globbed
@@ -574,26 +574,16 @@ def copydebugsources(debugsrcdir, sources, d):
         objcopy = d.getVar("OBJCOPY")
         workdir = d.getVar("WORKDIR")
         sdir = d.getVar("S")
-        sparentdir = os.path.dirname(os.path.dirname(sdir))
-        sbasedir = os.path.basename(os.path.dirname(sdir)) + "/" + os.path.basename(sdir)
-        workparentdir = os.path.dirname(os.path.dirname(workdir))
-        workbasedir = os.path.basename(os.path.dirname(workdir)) + "/" + os.path.basename(workdir)
+        cflags = d.expand("${CFLAGS}")
 
-        # If S isnt based on WORKDIR we can infer our sources are located elsewhere,
-        # e.g. using externalsrc; use S as base for our dirs
-        if workdir in sdir or 'work-shared' in sdir:
-            basedir = workbasedir
-            parentdir = workparentdir
-        else:
-            basedir = sbasedir
-            parentdir = sparentdir
-
-        # If build path exists in sourcefile, it means toolchain did not use
-        # -fdebug-prefix-map to compile
-        if checkbuildpath(sourcefile, d):
-            localsrc_prefix = parentdir + "/"
-        else:
-            localsrc_prefix = "/usr/src/debug/"
+        prefixmap = {}
+        for flag in cflags.split():
+            if not flag.startswith("-fdebug-prefix-map"):
+                continue
+            if "recipe-sysroot" in flag:
+                continue
+            flag = flag.split("=")
+            prefixmap[flag[1]] = flag[2]
 
         nosuchdir = []
         basepath = dvar
@@ -604,28 +594,26 @@ def copydebugsources(debugsrcdir, sources, d):
         bb.utils.mkdirhier(basepath)
         cpath.updatecache(basepath)
 
-        # Ignore files from the recipe sysroots (target and native)
-        processdebugsrc =  "LC_ALL=C ; sort -z -u '%s' | egrep -v -z '((<internal>|<built-in>)$|/.*recipe-sysroot.*/)' | "
-        # We need to ignore files that are not actually ours
-        # we do this by only paying attention to items from this package
-        processdebugsrc += "fgrep -zw '%s' | "
-        # Remove prefix in the source paths
-        processdebugsrc += "sed 's#%s##g' | "
-        processdebugsrc += "(cd '%s' ; cpio -pd0mlL --no-preserve-owner '%s%s' 2>/dev/null)"
+        for pmap in prefixmap:
+            # Ignore files from the recipe sysroots (target and native)
+            cmd =  "LC_ALL=C ; sort -z -u '%s' | egrep -v -z '((<internal>|<built-in>)$|/.*recipe-sysroot.*/)' | " % sourcefile
+            # We need to ignore files that are not actually ours
+            # we do this by only paying attention to items from this package
+            cmd += "fgrep -zw '%s' | " % prefixmap[pmap]
+            # Remove prefix in the source paths
+            cmd += "sed 's#%s/##g' | " % (prefixmap[pmap])
+            cmd += "(cd '%s' ; cpio -pd0mlL --no-preserve-owner '%s%s' 2>/dev/null)" % (pmap, dvar, prefixmap[pmap])
 
-        cmd = processdebugsrc % (sourcefile, basedir, localsrc_prefix, parentdir, dvar, debugsrcdir)
-        try:
+            try:
+                subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+            except subprocess.CalledProcessError:
+                # Can "fail" if internal headers/transient sources are attempted
+                pass
+            # cpio seems to have a bug with -lL together and symbolic links are just copied, not dereferenced.
+            # Work around this by manually finding and copying any symbolic links that made it through.
+            cmd = "find %s%s -type l -print0 -delete | sed s#%s%s/##g | (cd '%s' ; cpio -pd0mL --no-preserve-owner '%s%s')" % \
+                    (dvar, prefixmap[pmap], dvar, prefixmap[pmap], pmap, dvar, prefixmap[pmap])
             subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError:
-            # Can "fail" if internal headers/transient sources are attempted
-            pass
-
-        # cpio seems to have a bug with -lL together and symbolic links are just copied, not dereferenced.
-        # Work around this by manually finding and copying any symbolic links that made it through.
-        cmd = "find %s%s -type l -print0 -delete | sed s#%s%s/##g | (cd '%s' ; cpio -pd0mL --no-preserve-owner '%s%s')" % \
-                (dvar, debugsrcdir, dvar, debugsrcdir, parentdir, dvar, debugsrcdir)
-        subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
-
 
         # debugsources.list may be polluted from the host if we used externalsrc,
         # cpio uses copy-pass and may have just created a directory structure
@@ -636,6 +624,13 @@ def copydebugsources(debugsrcdir, sources, d):
         # Same check as above for externalsrc
         if workdir not in sdir:
             if os.path.exists(dvar + debugsrcdir + sdir):
+                # Special case for /build since we need to move into
+                # /usr/src/debug/build so rename sdir to build.build
+                if sdir == "/build" or sdir.find("/build/") == 0:
+                    cmd = "mv %s%s%s %s%s%s" % (dvar, debugsrcdir, "/build", dvar, debugsrcdir, "/build.build")
+                    subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+                    sdir = sdir.replace("/build", "/build.build", 1)
+
                 cmd = "mv %s%s%s/* %s%s" % (dvar, debugsrcdir, sdir, dvar,debugsrcdir)
                 subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
 
@@ -1855,7 +1850,7 @@ SHLIBSWORKDIR = "${PKGDESTWORK}/${MLPREFIX}shlibs2"
 
 python package_do_shlibs() {
     import itertools
-    import re, pipes
+    import re, shlex
     import subprocess
 
     exclude_shlibs = d.getVar('EXCLUDE_FROM_SHLIBS', False)
@@ -1899,7 +1894,7 @@ python package_do_shlibs() {
         sonames = set()
         renames = []
         ldir = os.path.dirname(file).replace(pkgdest + "/" + pkg, '')
-        cmd = d.getVar('OBJDUMP') + " -p " + pipes.quote(file) + " 2>/dev/null"
+        cmd = d.getVar('OBJDUMP') + " -p " + shlex.quote(file) + " 2>/dev/null"
         fd = os.popen(cmd)
         lines = fd.readlines()
         fd.close()
@@ -2171,18 +2166,18 @@ python package_do_pkgconfig () {
                     with open(file, 'r') as f:
                         lines = f.readlines()
                     for l in lines:
-                        m = var_re.match(l)
-                        if m:
-                            name = m.group(1)
-                            val = m.group(2)
-                            pd.setVar(name, pd.expand(val))
-                            continue
                         m = field_re.match(l)
                         if m:
                             hdr = m.group(1)
                             exp = pd.expand(m.group(2))
                             if hdr == 'Requires':
                                 pkgconfig_needed[pkg] += exp.replace(',', ' ').split()
+                                continue
+                        m = var_re.match(l)
+                        if m:
+                            name = m.group(1)
+                            val = m.group(2)
+                            pd.setVar(name, pd.expand(val))
 
     for pkg in packages.split():
         pkgs_file = os.path.join(shlibswork_dir, pkg + ".pclist")

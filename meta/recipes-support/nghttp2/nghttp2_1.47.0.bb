@@ -9,6 +9,10 @@ UPSTREAM_CHECK_URI = "https://github.com/nghttp2/nghttp2/releases"
 SRC_URI = "\
     https://github.com/nghttp2/nghttp2/releases/download/v${PV}/nghttp2-${PV}.tar.xz \
     file://0001-fetch-ocsp-response-use-python3.patch \
+    file://CVE-2023-35945.patch \
+    file://CVE-2023-44487.patch \
+    file://CVE-2024-28182-0001.patch \
+    file://CVE-2024-28182-0002.patch \
 "
 SRC_URI[sha256sum] = "68271951324554c34501b85190f22f2221056db69f493afc3bbac8e7be21e7cc"
 
@@ -19,17 +23,19 @@ PACKAGECONFIG[manpages] = ""
 # first place
 EXTRA_OECMAKE = "-DENABLE_EXAMPLES=OFF -DENABLE_APP=OFF -DENABLE_HPACK_TOOLS=OFF"
 
-PACKAGES =+ "lib${BPN} ${PN}-client ${PN}-proxy ${PN}-server"
+# Do not let configure try to decide this.
+#
+EXTRA_OECMAKE += "-DENABLE_PYTHON_BINDINGS=OFF"
 
-RDEPENDS:${PN} = "${PN}-client (>= ${PV}) ${PN}-proxy (>= ${PV}) ${PN}-server (>= ${PV})"
+PACKAGES =+ "lib${BPN} ${PN}-proxy "
+
+RDEPENDS:${PN} = "${PN}-proxy (>= ${PV})"
 RDEPENDS:${PN}:class-native = ""
 RDEPENDS:${PN}-proxy = "openssl python3-core python3-io python3-shell"
 
 ALLOW_EMPTY:${PN} = "1"
 FILES:${PN} = ""
 FILES:lib${BPN} = "${libdir}/*${SOLIBS}"
-FILES:${PN}-client = "${bindir}/h2load ${bindir}/nghttp"
 FILES:${PN}-proxy = "${bindir}/nghttpx ${datadir}/${BPN}/fetch-ocsp-response"
-FILES:${PN}-server = "${bindir}/nghttpd"
 
 BBCLASSEXTEND = "native nativesdk"

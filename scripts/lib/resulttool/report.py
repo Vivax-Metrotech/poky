@@ -176,7 +176,10 @@ class ResultsTextReport(object):
             vals['sort'] = line['testseries'] + "_" + line['result_id']
             vals['failed_testcases'] = line['failed_testcases']
             for k in cols:
-                vals[k] = "%d (%s%%)" % (line[k], format(line[k] / total_tested * 100, '.0f'))
+                if total_tested:
+                    vals[k] = "%d (%s%%)" % (line[k], format(line[k] / total_tested * 100, '.0f'))
+                else:
+                    vals[k] = "0 (0%)"
             for k in maxlen:
                 if k in vals and len(vals[k]) > maxlen[k]:
                     maxlen[k] = len(vals[k])
@@ -253,7 +256,7 @@ class ResultsTextReport(object):
                 if selected_test_case_only:
                     print_selected_testcase_result(raw_results, selected_test_case_only)
                 else:
-                    print(json.dumps(raw_results, sort_keys=True, indent=4))
+                    print(json.dumps(raw_results, sort_keys=True, indent=1))
             else:
                 print('Could not find raw test result for %s' % raw_test)
             return 0

@@ -24,6 +24,7 @@ PROVIDES = "virtual/libsdl2"
 SRC_URI = "http://www.libsdl.org/release/SDL2-${PV}.tar.gz \
            file://optional-libunwind-generic.patch \
            file://0001-sdlchecks.cmake-pass-cflags-to-the-appropriate-cmake.patch \
+           file://0001-Fix-potential-memory-leak-in-GLES_CreateTextur.patch \
            "
 SRC_URI:append:class-native = " file://0001-Disable-libunwind-in-native-OE-builds-by-not-looking.patch"
 
@@ -81,3 +82,6 @@ PACKAGECONFIG[x11]        = "-DSDL_X11=ON,-DSDL_X11=OFF,virtual/libx11 libxext l
 CFLAGS:append:class-native = " -DNO_SHARED_MEMORY"
 
 BBCLASSEXTEND = "native nativesdk"
+
+# These are fixed since 2.0.14, NVD DB incorrectly lists > 20.0.20
+CVE_CHECK_IGNORE += "CVE-2020-14409 CVE-2020-14410"

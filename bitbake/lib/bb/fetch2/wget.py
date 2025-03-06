@@ -88,7 +88,10 @@ class Wget(FetchMethod):
         if not ud.localfile:
             ud.localfile = d.expand(urllib.parse.unquote(ud.host + ud.path).replace("/", "."))
 
-        self.basecmd = d.getVar("FETCHCMD_wget") or "/usr/bin/env wget -t 2 -T 30 --passive-ftp"
+        self.basecmd = d.getVar("FETCHCMD_wget") or "/usr/bin/env wget -t 2 -T 100"
+
+        if ud.type == 'ftp' or ud.type == 'ftps':
+            self.basecmd += " --passive-ftp"
 
         if not self.check_certs(d):
             self.basecmd += " --no-check-certificate"
@@ -106,10 +109,10 @@ class Wget(FetchMethod):
 
         fetchcmd = self.basecmd
 
-        if 'downloadfilename' in ud.parm:
-            localpath = os.path.join(d.getVar("DL_DIR"), ud.localfile)
-            bb.utils.mkdirhier(os.path.dirname(localpath))
-            fetchcmd += " -O %s" % shlex.quote(localpath)
+        dldir = os.path.realpath(d.getVar("DL_DIR"))
+        localpath = os.path.join(dldir, ud.localfile) + ".tmp"
+        bb.utils.mkdirhier(os.path.dirname(localpath))
+        fetchcmd += " -O %s" % shlex.quote(localpath)
 
         if ud.user and ud.pswd:
             fetchcmd += " --auth-no-challenge"
@@ -127,11 +130,15 @@ class Wget(FetchMethod):
         uri = ud.url.split(";")[0]
         if os.path.exists(ud.localpath):
             # file exists, but we didnt complete it.. trying again..
-            fetchcmd += d.expand(" -c -P ${DL_DIR} '%s'" % uri)
+            fetchcmd += " -c -P " + dldir + " '" + uri + "'"
         else:
-            fetchcmd += d.expand(" -P ${DL_DIR} '%s'" % uri)
+            fetchcmd += " -P " + dldir + " '" + uri + "'"
 
         self._runwget(ud, d, fetchcmd, False)
+
+        # Remove the ".tmp" and move the file into position atomically
+        # Our lock prevents multiple writers but mirroring code may grab incomplete files
+        os.rename(localpath, localpath[:-4])
 
         # Sanity check since wget can pretend it succeed when it didn't
         # Also, this used to happen if sourceforge sent us to the mirror page
@@ -358,7 +365,7 @@ class Wget(FetchMethod):
                 except (TypeError, ImportError, IOError, netrc.NetrcParseError):
                     pass
 
-                with opener.open(r, timeout=30) as response:
+                with opener.open(r, timeout=100) as response:
                     pass
             except urllib.error.URLError as e:
                 if try_again:

@@ -17,6 +17,43 @@ SRC_URI = "${GNOME_MIRROR}/glib/${SHRT_VER}/glib-${PV}.tar.xz \
            file://0001-meson-Run-atomics-test-on-clang-as-well.patch \
            file://0001-gio-tests-resources.c-comment-out-a-build-host-only-.patch \
            file://0001-gio-tests-g-file-info-don-t-assume-million-in-one-ev.patch \
+           file://CVE-2023-32665-0001.patch \
+           file://CVE-2023-32665-0002.patch \
+           file://CVE-2023-32665-0003.patch \
+           file://CVE-2023-32665-0004.patch \
+           file://CVE-2023-32665-0005.patch \
+           file://CVE-2023-32665-0006.patch \
+           file://CVE-2023-32665-0007.patch \
+           file://CVE-2023-32665-0008.patch \
+           file://CVE-2023-32665-0009.patch \
+           file://CVE-2023-29499.patch \
+           file://CVE-2023-32611-0001.patch \
+           file://CVE-2023-32611-0002.patch \
+           file://CVE-2023-32643.patch \
+           file://CVE-2023-32636.patch \
+           file://CVE-2024-34397_01.patch \
+           file://CVE-2024-34397_02.patch \
+           file://CVE-2024-34397_03.patch \
+           file://CVE-2024-34397_04.patch \
+           file://CVE-2024-34397_05.patch \
+           file://CVE-2024-34397_06.patch \
+           file://CVE-2024-34397_07.patch \
+           file://CVE-2024-34397_08.patch \
+           file://CVE-2024-34397_09.patch \
+           file://CVE-2024-34397_10.patch \
+           file://CVE-2024-34397_11.patch \
+           file://CVE-2024-34397_12.patch \
+           file://CVE-2024-34397_13.patch \
+           file://CVE-2024-34397_14.patch \
+           file://CVE-2024-34397_15.patch \
+           file://CVE-2024-34397_16.patch \
+           file://CVE-2024-34397_17.patch \
+           file://CVE-2024-34397_18.patch \
+           file://0001-gvariant-serialiser-Convert-endianness-of-offsets.patch \
+           file://CVE-2024-52533.patch \
+           file://gdatetime-test-fail-0001.patch \
+           file://gdatetime-test-fail-0002.patch \
+           file://gdatetime-test-fail-0003.patch \
            "
 SRC_URI:append:class-native = " file://relocate-modules.patch"
 

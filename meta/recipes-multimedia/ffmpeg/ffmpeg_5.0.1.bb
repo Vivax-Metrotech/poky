@@ -28,9 +28,61 @@ SRC_URI = "https://www.ffmpeg.org/releases/${BP}.tar.xz \
            file://0001-avcodec-smcenc-stop-accessing-out-of-bounds-frame.patch \
            file://0001-avcodec-vp3-Add-missing-check-for-av_malloc.patch \
            file://0001-avformat-nutdec-Add-check-for-avformat_new_stream.patch \
-           "
+           file://CVE-2022-48434.patch \
+           file://CVE-2024-32230.patch \
+           file://CVE-2023-51793.patch \
+           file://CVE-2023-50008.patch \
+           file://CVE-2024-31582.patch \
+           file://CVE-2024-31578.patch \
+           file://CVE-2023-51794.patch \
+           file://CVE-2023-51798.patch \
+           file://CVE-2023-47342.patch \
+           file://CVE-2023-50007.patch \
+           file://CVE-2023-51796.patch \
+           file://CVE-2024-7055.patch \
+           file://CVE-2024-35366.patch \
+           file://CVE-2024-35367.patch \
+           file://CVE-2024-35368.patch \
+           file://CVE-2025-0518.patch \
+           file://CVE-2024-36613.patch \
+           file://CVE-2024-36616.patch \
+           file://CVE-2024-36617.patch \
+           file://CVE-2024-36618.patch \
+           file://CVE-2024-28661.patch \
+           file://CVE-2024-35369.patch \
+           file://CVE-2025-25473.patch \
+          "
 
 SRC_URI[sha256sum] = "ef2efae259ce80a240de48ec85ecb062cecca26e4352ffb3fda562c21a93007b"
+
+# CVE-2023-39018 issue belongs to ffmpeg-cli-wrapper (Java wrapper around the FFmpeg CLI)
+# and not ffmepg itself.
+# https://security-tracker.debian.org/tracker/CVE-2023-39018
+# https://bugzilla.suse.com/show_bug.cgi?id=CVE-2023-39018
+CVE_CHECK_IGNORE += "CVE-2023-39018"
+
+# There is no release which is vulnerable to these CVEs
+# These vulnerabilities are in new features being developed and fixed before releasing them
+# feature (jpeg xl): https://github.com/FFmpeg/FFmpeg/commit/0c0dd23fe1102313742092c4760596971755814e
+# bugfix: https://github.com/FFmpeg/FFmpeg/commit/bf814387f42e9b0dea9d75c03db4723c88e7d962
+CVE_CHECK_IGNORE += "CVE-2023-46407"
+# feature (evc parser): https://github.com/FFmpeg/FFmpeg/commit/34e4f18360c4ecb8e5979cab8f389478d8cd7819
+# bugfix: https://github.com/FFmpeg/FFmpeg/commit/4565747056a11356210ed8edcecb920105e40b60
+CVE_CHECK_IGNORE += "CVE-2023-47470"
+# feature (jpeg xl): https://github.com/FFmpeg/FFmpeg/commit/0c0dd23fe1102313742092c4760596971755814e
+# bugfix: https://github.com/FFmpeg/FFmpeg/commit/d2e8974699a9e35cc1a926bf74a972300d629cd5
+CVE_CHECK_IGNORE += "CVE-2024-22860"
+# feature (oqs audio decoder): https://github.com/FFmpeg/FFmpeg/commit/7ef9d31071021c05e6b792af3f25b7b9ceaa9258
+# bugfix: https://github.com/FFmpeg/FFmpeg/commit/87b8c1081959e45ffdcbabb3d53ac9882ef2b5ce
+CVE_CHECK_IGNORE += "CVE-2024-22861"
+# feature (jpeg xl): https://github.com/FFmpeg/FFmpeg/commit/0c0dd23fe1102313742092c4760596971755814e
+# bugfix: https://github.com/FFmpeg/FFmpeg/commit/ca09d8a0dcd82e3128e62463231296aaf63ae6f7
+CVE_CHECK_IGNORE += "CVE-2024-22862"
+
+# This vulnerability was introduced in 5.1 and fixed in 5.2 (backported also to 5.1.6), so 5.0.x is not affected
+# introduced: https://github.com/FFmpeg/FFmpeg/commit/8a5896ec1f635ccf0d726f7ba7a06649ebeebf25
+# bugfix: https://github.com/FFmpeg/FFmpeg/commit/9903ba28c28ab18dc7b7b6fb8571cc8b5caae1a6
+CVE_CHECK_IGNORE += "CVE-2024-7272"
 
 # Build fails when thumb is enabled: https://bugzilla.yoctoproject.org/show_bug.cgi?id=7717
 ARM_INSTRUCTION_SET:armv4 = "arm"

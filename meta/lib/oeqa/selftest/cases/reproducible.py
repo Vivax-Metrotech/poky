@@ -126,15 +126,23 @@ class DiffoscopeTests(OESelftestTestCase):
 class ReproducibleTests(OESelftestTestCase):
     # Test the reproducibility of whatever is built between sstate_targets and targets
 
-    package_classes = ['deb', 'ipk', 'rpm']
+    package_classes = get_bb_var("OEQA_REPRODUCIBLE_TEST_PACKAGE")
+    if package_classes:
+        package_classes = package_classes.split()
+    else:
+        package_classes = ['deb', 'ipk', 'rpm']
 
     # Maximum report size, in bytes
     max_report_size = 250 * 1024 * 1024
 
     # targets are the things we want to test the reproducibility of
-    targets = ['core-image-minimal', 'core-image-sato', 'core-image-full-cmdline', 'core-image-weston', 'world']
+    targets = get_bb_var("OEQA_REPRODUCIBLE_TEST_TARGET")
+    if targets:
+        targets = targets.split()
+    else:
+        targets = ['core-image-minimal', 'core-image-sato', 'core-image-full-cmdline', 'core-image-weston', 'world']
     # sstate targets are things to pull from sstate to potentially cut build/debugging time
-    sstate_targets = []
+    sstate_targets = (get_bb_var("OEQA_REPRODUCIBLE_TEST_SSTATE_TARGETS") or "").split()
     save_results = False
     if 'OEQA_DEBUGGING_SAVED_OUTPUT' in os.environ:
         save_results = os.environ['OEQA_DEBUGGING_SAVED_OUTPUT']
@@ -149,17 +157,13 @@ class ReproducibleTests(OESelftestTestCase):
 
     def setUpLocal(self):
         super().setUpLocal()
-        needed_vars = ['TOPDIR', 'TARGET_PREFIX', 'BB_NUMBER_THREADS']
+        needed_vars = ['TOPDIR', 'TARGET_PREFIX', 'BB_NUMBER_THREADS', 'BB_HASHSERVE']
         bb_vars = get_bb_vars(needed_vars)
         for v in needed_vars:
             setattr(self, v.lower(), bb_vars[v])
 
         self.extraresults = {}
-        self.extraresults.setdefault('reproducible.rawlogs', {})['log'] = ''
         self.extraresults.setdefault('reproducible', {}).setdefault('files', {})
-
-    def append_to_log(self, msg):
-        self.extraresults['reproducible.rawlogs']['log'] += msg
 
     def compare_packages(self, reference_dir, test_dir, diffutils_sysroot):
         result = PackageCompareResults()
@@ -187,7 +191,7 @@ class ReproducibleTests(OESelftestTestCase):
 
     def write_package_list(self, package_class, name, packages):
         self.extraresults['reproducible']['files'].setdefault(package_class, {})[name] = [
-                {'reference': p.reference, 'test': p.test} for p in packages]
+                p.reference.split("/./")[1] for p in packages]
 
     def copy_file(self, source, dest):
         bb.utils.mkdirhier(os.path.dirname(dest))
@@ -223,7 +227,7 @@ class ReproducibleTests(OESelftestTestCase):
             # mirror, forcing a complete build from scratch
             config += textwrap.dedent('''\
                 SSTATE_DIR = "${TMPDIR}/sstate"
-                SSTATE_MIRRORS = ""
+                SSTATE_MIRRORS = "file://.*/.*-native.*  http://sstate.yoctoproject.org/all/PATH;downloadfilename=PATH file://.*/.*-cross.*  http://sstate.yoctoproject.org/all/PATH;downloadfilename=PATH"
                 ''')
 
         self.logger.info("Building %s (sstate%s allowed)..." % (name, '' if use_sstate else ' NOT'))
@@ -273,8 +277,6 @@ class ReproducibleTests(OESelftestTestCase):
                 result = self.compare_packages(deploy_A, deploy_B, diffutils_sysroot)
 
                 self.logger.info('Reproducibility summary for %s: %s' % (c, result))
-
-                self.append_to_log('\n'.join("%s: %s" % (r.status, r.test) for r in result.total))
 
                 self.write_package_list(package_class, 'missing', result.missing)
                 self.write_package_list(package_class, 'different', result.different)

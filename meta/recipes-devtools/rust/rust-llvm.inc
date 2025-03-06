@@ -3,7 +3,9 @@ LICENSE ?= "Apache-2.0-with-LLVM-exception"
 HOMEPAGE = "http://www.rust-lang.org"
 
 SRC_URI += "file://0002-llvm-allow-env-override-of-exe-path.patch;striplevel=2 \
-            file://0001-AsmMatcherEmitter-sort-ClassInfo-lists-by-name-as-we.patch;striplevel=2"
+            file://0001-AsmMatcherEmitter-sort-ClassInfo-lists-by-name-as-we.patch;striplevel=2 \
+            file://0003-Support-Add-missing-cstdint-header-to-Signals.h.patch;striplevel=2 \
+"
 
 S = "${RUSTSRC}/src/llvm-project/llvm"
 
@@ -23,9 +25,11 @@ CXXFLAGS:remove = "-g"
 
 LLVM_DIR = "llvm${LLVM_RELEASE}"
 
+RUST_LLVM_TARGETS ?= "ARM;AArch64;Mips;PowerPC;RISCV;X86"
+
 EXTRA_OECMAKE = " \
     -DCMAKE_BUILD_TYPE=Release \
-    -DLLVM_TARGETS_TO_BUILD='ARM;AArch64;Mips;PowerPC;RISCV;X86' \
+    -DLLVM_TARGETS_TO_BUILD='${RUST_LLVM_TARGETS}' \
     -DLLVM_BUILD_DOCS=OFF \
     -DLLVM_ENABLE_TERMINFO=OFF \
     -DLLVM_ENABLE_ZLIB=OFF \

@@ -10,7 +10,7 @@ dot-matrix, inkjet and laser models. \
 HOMEPAGE = "http://www.ghostscript.com"
 SECTION = "console/utils"
 
-LICENSE = "GPL-3.0-only"
+LICENSE = "AGPL-3.0-or-later"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=f98ffa763e50cded76f49bce73aade16"
 
 DEPENDS = "ghostscript-native tiff jpeg fontconfig cups libpng"
@@ -23,6 +23,9 @@ UPSTREAM_CHECK_REGEX = "(?P<pver>\d+(\.\d+)+)\.tar"
 # however we use an external jpeg which doesn't have the issue.
 CVE_CHECK_IGNORE += "CVE-2013-6629"
 
+# Issue in the GhostPCL. GhostPCL not part of this GhostScript recipe.
+CVE_CHECK_IGNORE += "CVE-2023-38560 CVE-2024-46954"
+
 def gs_verdir(v):
     return "".join(v.split("."))
 
@@ -34,6 +37,31 @@ SRC_URI_BASE = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/d
                 file://avoid-host-contamination.patch \
                 file://mkdir-p.patch \
                 file://CVE-2022-2085.patch \
+                file://cve-2023-28879.patch \
+                file://CVE-2023-36664-0001.patch \
+                file://CVE-2023-36664-0002.patch \
+                file://CVE-2023-38559.patch \
+                file://CVE-2023-43115.patch \
+                file://CVE-2023-46751.patch \
+                file://CVE-2024-33870.patch \
+                file://CVE-2024-33869-0001.patch \
+                file://CVE-2024-33869-0002.patch \
+                file://CVE-2024-33871-0001.patch \
+                file://CVE-2024-33871-0002.patch \
+                file://CVE-2024-29510.patch \
+                file://CVE-2023-52722.patch \
+                file://CVE-2024-29511-0001.patch \
+                file://CVE-2024-29511-0002.patch \
+                file://CVE-2024-29509.patch \
+                file://CVE-2024-29506.patch \
+                file://CVE-2024-29508-1.patch \
+                file://CVE-2024-29508-2.patch \
+                file://CVE-2023-46361.patch \
+                file://CVE-2024-46951.patch \
+                file://CVE-2024-46952.patch \
+                file://CVE-2024-46953.patch \
+                file://CVE-2024-46955.patch \
+                file://CVE-2024-46956.patch \
 "
 
 SRC_URI = "${SRC_URI_BASE} \

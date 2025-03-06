@@ -27,6 +27,31 @@ SRC_URI = "gitsm://github.com/tianocore/edk2.git;branch=master;protocol=https \
            file://0006-reproducible.patch \
            file://0001-BaseTools-fix-gcc12-warning.patch \
            file://0001-BaseTools-fix-gcc12-warning-1.patch \
+           file://CVE-2022-36763-0001.patch \
+           file://CVE-2022-36763-0002.patch \
+           file://CVE-2022-36763-0003.patch \
+           file://CVE-2022-36764-0001.patch \
+           file://CVE-2022-36764-0002.patch \
+           file://CVE-2022-36764-0003.patch \
+           file://CVE-2023-45230-0001.patch \
+           file://CVE-2023-45230-0002.patch \
+           file://CVE-2023-45231-0001.patch \
+           file://CVE-2023-45231-0002.patch \
+           file://CVE-2023-45232-CVE-2023-45233-0001.patch \
+           file://CVE-2023-45232-CVE-2023-45233-0002.patch \
+           file://CVE-2023-45234-0001.patch \
+           file://CVE-2023-45234-0002.patch \
+           file://CVE-2023-45235-0001.patch \
+           file://CVE-2023-45235-0002.patch \
+           file://CVE-2023-45229-0001.patch \
+           file://CVE-2023-45229-0002.patch \
+           file://CVE-2023-45229-0003.patch \
+           file://CVE-2023-45229-0004.patch \
+           file://CVE-2022-36765-0001.patch \
+           file://CVE-2022-36765-0002.patch \
+           file://CVE-2022-36765-0003.patch \
+           file://0001-MdePkg-Fix-overflow-issue-in-BasePeCoffLib.patch \
+           file://0001-MdeModulePkg-Potential-UINT32-overflow-in-S3-ResumeC.patch \
            "
 
 PV = "edk2-stable202202"
@@ -212,6 +237,7 @@ do_compile:class-target() {
 
 do_install:class-native() {
     install -d ${D}/${bindir}/edk2_basetools
+    find ${S}/BaseTools -name \*.pyc -exec rm -rf \{\} \;
     cp -r ${S}/BaseTools ${D}/${bindir}/${EDK_TOOLS_DIR}
 }
 

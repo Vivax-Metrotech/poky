@@ -3,14 +3,18 @@
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
-SPHINXOPTS    ?= -W --keep-going -j auto
-SPHINXBUILD   ?= sphinx-build
-SOURCEDIR     = .
-IMAGEDIRS     = */svg
-BUILDDIR      = _build
-DESTDIR       = final
-SVG2PNG       = inkscape
-SVG2PDF       = inkscape
+SPHINXOPTS     ?= -W --keep-going -j auto
+SPHINXBUILD    ?= sphinx-build
+# Release notes are excluded because they contain contributor names and commit messages which can't be modified
+VALEOPTS       ?= --no-wrap --glob '!migration-guides/release-notes-*.rst'
+SOURCEDIR      = .
+VALEDOCS       ?= $(SOURCEDIR)
+SPHINXLINTDOCS ?= $(SOURCEDIR)
+IMAGEDIRS      = */svg
+BUILDDIR       = _build
+DESTDIR        = final
+SVG2PNG        = inkscape
+SVG2PDF        = inkscape
 
 ifeq ($(shell if which $(SPHINXBUILD) >/dev/null 2>&1; then echo 1; else echo 0; fi),0)
 $(error "The '$(SPHINXBUILD)' command was not found. Make sure you have Sphinx installed")
@@ -20,7 +24,7 @@ endif
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: all help Makefile clean publish epub latexpdf
+.PHONY: all help Makefile clean stylecheck publish epub latexpdf
 
 publish: Makefile html singlehtml
 	rm -rf $(BUILDDIR)/$(DESTDIR)/
@@ -46,10 +50,19 @@ PNGs := $(foreach dir, $(IMAGEDIRS), $(patsubst %.svg,%.png,$(wildcard $(SOURCED
 clean:
 	@rm -rf $(BUILDDIR) $(PNGs) $(PDFs) poky.yaml sphinx-static/switchers.js
 
+stylecheck:
+	vale sync
+	vale $(VALEOPTS) $(VALEDOCS)
+
+sphinx-lint:
+	sphinx-lint $(SPHINXLINTDOCS)
+
 epub: $(PNGs)
+	$(SOURCEDIR)/set_versions.py
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 latexpdf: $(PDFs)
+	$(SOURCEDIR)/set_versions.py
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 all: html epub latexpdf

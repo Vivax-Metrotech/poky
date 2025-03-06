@@ -1,6 +1,7 @@
 KBRANCH ?= "v5.15/standard/base"
 
 require recipes-kernel/linux/linux-yocto.inc
+include cve-exclusion_5.15.inc
 
 # board specific branches
 KBRANCH:qemuarm  ?= "v5.15/standard/arm-versatile-926ejs"
@@ -13,24 +14,24 @@ KBRANCH:qemux86  ?= "v5.15/standard/base"
 KBRANCH:qemux86-64 ?= "v5.15/standard/base"
 KBRANCH:qemumips64 ?= "v5.15/standard/mti-malta64"
 
-SRCREV_machine:qemuarm ?= "9c525056e4d5c3852fff6058bd7f6a648a3b645e"
-SRCREV_machine:qemuarm64 ?= "30e3bff02675a3d10bd04c51f52f4a6b17b94d01"
-SRCREV_machine:qemumips ?= "0dda96ab67034ee0f1db18c04fed33d2a4e2fec1"
-SRCREV_machine:qemuppc ?= "43c8d401cf8092c19e47935c5667dacf754885d4"
-SRCREV_machine:qemuriscv64 ?= "531238ba91af58291b5f306c237e6bc1b8b6633a"
-SRCREV_machine:qemuriscv32 ?= "531238ba91af58291b5f306c237e6bc1b8b6633a"
-SRCREV_machine:qemux86 ?= "531238ba91af58291b5f306c237e6bc1b8b6633a"
-SRCREV_machine:qemux86-64 ?= "531238ba91af58291b5f306c237e6bc1b8b6633a"
-SRCREV_machine:qemumips64 ?= "26e3543c62c04852896adc70584b1eaa59f15fad"
-SRCREV_machine ?= "531238ba91af58291b5f306c237e6bc1b8b6633a"
-SRCREV_meta ?= "8df0d345ef202197eef82942933161213d4d1846"
+SRCREV_machine:qemuarm ?= "31fa49dbe9f3a64362078de6b59da96afcad718f"
+SRCREV_machine:qemuarm64 ?= "e46eb0a3250c9a5ee8ebea25a80298f693ae691c"
+SRCREV_machine:qemumips ?= "539bfe9f18782440707e86df545a47f425208797"
+SRCREV_machine:qemuppc ?= "c26ce5169b6964dcdafb09b4528c47b378f94528"
+SRCREV_machine:qemuriscv64 ?= "9026df72c466542d6a1592bdc12c9c8dfa54dd33"
+SRCREV_machine:qemuriscv32 ?= "9026df72c466542d6a1592bdc12c9c8dfa54dd33"
+SRCREV_machine:qemux86 ?= "9026df72c466542d6a1592bdc12c9c8dfa54dd33"
+SRCREV_machine:qemux86-64 ?= "9026df72c466542d6a1592bdc12c9c8dfa54dd33"
+SRCREV_machine:qemumips64 ?= "d633d7d27475d3615f5a33467c04b0b0cb14517c"
+SRCREV_machine ?= "9026df72c466542d6a1592bdc12c9c8dfa54dd33"
+SRCREV_meta ?= "853814dcf5cf386ac47bcc85ef384d2055c8a4e7"
 
 # set your preferred provider of linux-yocto to 'linux-yocto-upstream', and you'll
 # get the <version>/base branch, which is pure upstream -stable, and the same
 # meta SRCREV as the linux-yocto-standard builds. Select your version using the
 # normal PREFERRED_VERSION settings.
 BBCLASSEXTEND = "devupstream:target"
-SRCREV_machine:class-devupstream ?= "9cf4111cdf9420fa99792ae16c8de23242bb2e0b"
+SRCREV_machine:class-devupstream ?= "c16c81c81336c0912eb3542194f16215c0a40037"
 PN:class-devupstream = "linux-yocto-upstream"
 KBRANCH:class-devupstream = "v5.15/base"
 
@@ -38,7 +39,7 @@ SRC_URI = "git://git.yoctoproject.org/linux-yocto.git;name=machine;branch=${KBRA
            git://git.yoctoproject.org/yocto-kernel-cache;type=kmeta;name=meta;branch=yocto-5.15;destsuffix=${KMETA}"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
-LINUX_VERSION ?= "5.15.91"
+LINUX_VERSION ?= "5.15.178"
 
 DEPENDS += "${@bb.utils.contains('ARCH', 'x86', 'elfutils-native', '', d)}"
 DEPENDS += "openssl-native util-linux-native"

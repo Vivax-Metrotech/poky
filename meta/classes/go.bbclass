@@ -1,4 +1,5 @@
 inherit goarch
+inherit linuxloader
 
 GO_PARALLEL_BUILD ?= "${@oe.utils.parallel_make_argument(d, '-p %d')}"
 
@@ -44,7 +45,10 @@ GO_LINKMODE ?= ""
 GO_LINKMODE:class-nativesdk = "--linkmode=external"
 GO_LINKMODE:class-native = "--linkmode=external"
 GO_EXTRA_LDFLAGS ?= ""
-GO_LDFLAGS ?= '-ldflags="${GO_RPATH} ${GO_LINKMODE} ${GO_EXTRA_LDFLAGS} -extldflags '${GO_EXTLDFLAGS}'"'
+GO_LINUXLOADER ?= "-I ${@get_linuxloader(d)}"
+# Use system loader. If uninative is used, the uninative loader will be patched automatically
+GO_LINUXLOADER:class-native = ""
+GO_LDFLAGS ?= '-ldflags="${GO_RPATH} ${GO_LINKMODE} ${GO_LINUXLOADER} ${GO_EXTRA_LDFLAGS} -extldflags '${GO_EXTLDFLAGS}'"'
 export GOBUILDFLAGS ?= "-v ${GO_LDFLAGS} -trimpath"
 export GOPATH_OMIT_IN_ACTIONID ?= "1"
 export GOPTESTBUILDFLAGS ?= "${GOBUILDFLAGS} -c"
@@ -122,7 +126,7 @@ go_do_install() {
 	tar -C ${B} -cf - --exclude-vcs --exclude '*.test' --exclude 'testdata' pkg | \
 		tar -C ${D}${libdir}/go --no-same-owner -xf -
 
-	if [ -n "`ls ${B}/${GO_BUILD_BINDIR}/`" ]; then
+	if ls ${B}/${GO_BUILD_BINDIR}/* >/dev/null 2>/dev/null ; then
 		install -d ${D}${bindir}
 		install -m 0755 ${B}/${GO_BUILD_BINDIR}/* ${D}${bindir}/
 	fi

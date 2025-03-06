@@ -16,6 +16,9 @@ do_deploy_source_date_epoch () {
 	sde_file=${SDE_FILE}
 	sde_file=${sde_file#${WORKDIR}/}
 	mkdir -p ${SDE_DEPLOYDIR} $(dirname ${SDE_FILE})
-	cp -p ${S}/../$sde_file ${SDE_DEPLOYDIR}
-	cp -p ${S}/../$sde_file ${SDE_FILE}
+	cp -p $(dirname ${S})/$sde_file ${SDE_DEPLOYDIR}
+	cp -p $(dirname ${S})/$sde_file ${SDE_FILE}
 }
+
+# patch is available via gcc-source recipe
+CVE_CHECK_IGNORE += "CVE-2023-4039"

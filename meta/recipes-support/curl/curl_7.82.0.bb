@@ -34,11 +34,45 @@ SRC_URI = "https://curl.se/download/${BP}.tar.xz \
            file://CVE-2022-42915.patch \
            file://CVE-2022-43551.patch \
            file://CVE-2022-43552.patch \
+           file://CVE-2023-23914_5-1.patch \
+           file://CVE-2023-23914_5-2.patch \
+           file://CVE-2023-23914_5-3.patch \
+           file://CVE-2023-23914_5-4.patch \
+           file://CVE-2023-23914_5-5.patch \
+           file://CVE-2023-23916.patch \
+           file://CVE-2023-27533.patch \
+           file://CVE-2023-27534.patch \
+           file://CVE-2023-27535-pre1.patch \
+           file://CVE-2023-27535_and_CVE-2023-27538.patch \
+           file://CVE-2023-27536.patch \
+           file://CVE-2023-28319.patch \
+           file://CVE-2023-28320.patch \
+           file://CVE-2023-28320-fol1.patch \
+           file://CVE-2023-28321.patch \
+           file://CVE-2023-28322-1.patch \
+           file://CVE-2023-28322-2.patch \
+           file://CVE-2023-38545.patch \
+           file://CVE-2023-38546.patch \
+           file://CVE-2023-46218.patch \
+           file://CVE-2023-46219-0001.patch \
+           file://CVE-2023-46219-0002.patch \
+           file://CVE-2023-46219-0003.patch \
+           file://CVE-2024-2398.patch \
+           file://CVE-2024-7264_1.patch \
+           file://CVE-2024-7264_2.patch \
+           file://CVE-2024-8096.patch \
+           file://0001-url-free-old-conn-better-on-reuse.patch \
+           file://CVE-2024-9681.patch \
            "
 SRC_URI[sha256sum] = "0aaa12d7bd04b0966254f2703ce80dd5c38dbbd76af0297d3d690cdce58a583c"
 
 # Curl has used many names over the years...
 CVE_PRODUCT = "haxx:curl haxx:libcurl curl:curl curl:libcurl libcurl:libcurl daniel_stenberg:curl"
+
+# This CVE reports that apple had to upgrade curl because of other already reported CVEs
+CVE_CHECK_IGNORE += "CVE-2023-42915"
+# ignored: CURLOPT_SSL_VERIFYPEER was disabled on google cloud services causing a potential man in the middle attack
+CVE_CHECK_IGNORE += "CVE-2024-32928"
 
 inherit autotools pkgconfig binconfig multilib_header
 
@@ -53,14 +87,16 @@ PACKAGECONFIG:class-nativesdk = "ipv6 openssl proxy random threaded-resolver ver
 PACKAGECONFIG[ares] = "--enable-ares,--disable-ares,c-ares,,,threaded-resolver"
 PACKAGECONFIG[brotli] = "--with-brotli,--without-brotli,brotli"
 PACKAGECONFIG[builtinmanual] = "--enable-manual,--disable-manual"
+# Don't use this in production
+PACKAGECONFIG[debug] = "--enable-debug,--disable-debug"
 PACKAGECONFIG[dict] = "--enable-dict,--disable-dict,"
 PACKAGECONFIG[gnutls] = "--with-gnutls,--without-gnutls,gnutls"
 PACKAGECONFIG[gopher] = "--enable-gopher,--disable-gopher,"
 PACKAGECONFIG[imap] = "--enable-imap,--disable-imap,"
 PACKAGECONFIG[ipv6] = "--enable-ipv6,--disable-ipv6,"
 PACKAGECONFIG[krb5] = "--with-gssapi,--without-gssapi,krb5"
-PACKAGECONFIG[ldap] = "--enable-ldap,--disable-ldap,"
-PACKAGECONFIG[ldaps] = "--enable-ldaps,--disable-ldaps,"
+PACKAGECONFIG[ldap] = "--enable-ldap,--disable-ldap,openldap"
+PACKAGECONFIG[ldaps] = "--enable-ldaps,--disable-ldaps,openldap"
 PACKAGECONFIG[libgsasl] = "--with-libgsasl,--without-libgsasl,libgsasl"
 PACKAGECONFIG[libidn] = "--with-libidn2,--without-libidn2,libidn2"
 PACKAGECONFIG[libssh2] = "--with-libssh2,--without-libssh2,libssh2"
@@ -89,9 +125,7 @@ EXTRA_OECONF = " \
     --enable-crypto-auth \
     --with-ca-bundle=${sysconfdir}/ssl/certs/ca-certificates.crt \
     --without-libpsl \
-    --enable-debug \
     --enable-optimize \
-    --disable-curldebug \
     ${@'--without-ssl' if (bb.utils.filter('PACKAGECONFIG', 'gnutls mbedtls nss openssl', d) == '') else ''} \
 "
 

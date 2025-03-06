@@ -7,11 +7,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=d499814247adaee08d88080841cb5665"
 
 DEPENDS = "e2fsprogs-native"
 
-PACKAGECONFIG ?= "zlib bz2 xz lzo zstd"
-
-PACKAGECONFIG:append:class-target = "\
-	${@bb.utils.filter('DISTRO_FEATURES', 'acl xattr', d)} \
-"
+PACKAGECONFIG ?= "zlib bz2 xz lzo zstd ${@bb.utils.filter('DISTRO_FEATURES', 'acl xattr', d)}"
 
 DEPENDS_BZIP2 = "bzip2-replacement-native"
 DEPENDS_BZIP2:class-target = "bzip2"
@@ -32,10 +28,21 @@ PACKAGECONFIG[zstd] = "--with-zstd,--without-zstd,zstd,"
 
 EXTRA_OECONF += "--enable-largefile --without-iconv"
 
-SRC_URI = "http://libarchive.org/downloads/libarchive-${PV}.tar.gz"
+SRC_URI = "http://libarchive.org/downloads/libarchive-${PV}.tar.gz \
+           file://0001-pax-writer-fix-multiple-security-vulnerabilities.patch \
+           file://CVE-2024-26256.patch \
+           file://CVE-2024-48957.patch \
+           file://CVE-2024-48958.patch \
+           file://CVE-2024-20696.patch \
+           "
 UPSTREAM_CHECK_URI = "http://libarchive.org/"
 
 SRC_URI[sha256sum] = "ba6d02f15ba04aba9c23fd5f236bb234eab9d5209e95d1c4df85c44d5f19b9b3"
+
+# upstream-wontfix: upstream has documented that reported function is not thread-safe
+CVE_CHECK_IGNORE += "CVE-2023-30571"
+# cpe-incorrect: this vulnerability was not in any release; introduced in v3.7.3-14-g91f27004; fixed in b6a97948
+CVE_CHECK_IGNORE += "CVE-2024-37407"
 
 inherit autotools update-alternatives pkgconfig
 

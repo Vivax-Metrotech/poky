@@ -46,7 +46,6 @@ LINUX_VERSION_EXTENSION ??= "-yocto-${LINUX_KERNEL_TYPE}"
 # Pick up shared functions
 inherit kernel
 inherit kernel-yocto
-inherit pkgconfig
 
 B = "${WORKDIR}/linux-${PACKAGE_ARCH}-${LINUX_KERNEL_TYPE}-build"
 
@@ -70,3 +69,6 @@ do_devshell:prepend() {
     d.setVarFlag("PKG_CONFIG_SYSROOT_DIR", "unexport", "1")
     d.appendVar("OE_TERMINAL_EXPORTS", " PKG_CONFIG_DIR PKG_CONFIG_PATH PKG_CONFIG_LIBDIR PKG_CONFIG_SYSROOT_DIR")
 }
+
+# CVE exclusion
+include recipes-kernel/linux/cve-exclusion.inc

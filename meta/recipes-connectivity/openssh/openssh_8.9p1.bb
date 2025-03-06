@@ -26,6 +26,17 @@ SRC_URI = "http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${PV}.tar
            file://add-test-support-for-busybox.patch \
            file://f107467179428a0e3ea9e4aa9738ac12ff02822d.patch \
            file://0001-Default-to-not-using-sandbox-when-cross-compiling.patch \
+           file://7280401bdd77ca54be6867a154cc01e0d72612e0.patch \
+           file://0001-upstream-include-destination-constraints-for-smartca.patch \
+           file://CVE-2023-38408-0001.patch \
+           file://CVE-2023-38408-0002.patch \
+           file://CVE-2023-38408-0003.patch \
+           file://CVE-2023-38408-0004.patch \
+           file://fix-authorized-principals-command.patch \
+           file://CVE-2023-48795.patch \
+           file://CVE-2023-51384.patch \
+           file://CVE-2023-51385.patch \
+           file://CVE-2024-6387.patch \
            "
 SRC_URI[sha256sum] = "fd497654b7ab1686dac672fb83dfb4ba4096e8b5ffcdaccd262380ae58bec5e7"
 
@@ -38,6 +49,11 @@ CVE_CHECK_IGNORE += "CVE-2014-9278"
 
 # CVE only applies to some distributed RHEL binaries
 CVE_CHECK_IGNORE += "CVE-2008-3844"
+
+# Upstream does not consider CVE-2023-51767 a bug underlying in OpenSSH and
+# does not intent to address it in OpenSSH
+# https://security-tracker.debian.org/tracker/CVE-2023-51767
+CVE_CHECK_IGNORE += "CVE-2023-51767"
 
 PAM_SRC_URI = "file://sshd"
 
@@ -164,7 +180,7 @@ RDEPENDS:${PN}-sshd += "${PN}-keygen ${@bb.utils.contains('DISTRO_FEATURES', 'pa
 # conflict with each other
 RDEPENDS:${PN}-dev = ""
 # gdb would make attach-ptrace test pass rather than skip but not worth the build dependencies
-RDEPENDS:${PN}-ptest += "${PN}-sftp ${PN}-misc ${PN}-sftp-server make sed sudo coreutils"
+RDEPENDS:${PN}-ptest += "${PN}-sftp ${PN}-misc ${PN}-sftp-server make sed coreutils"
 
 RPROVIDES:${PN}-ssh = "ssh"
 RPROVIDES:${PN}-sshd = "sshd"

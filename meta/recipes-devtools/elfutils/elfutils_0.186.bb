@@ -23,6 +23,8 @@ SRC_URI = "https://sourceware.org/elfutils/ftp/${PV}/${BP}.tar.bz2 \
            file://0001-tests-Makefile.am-compile-test_nlist-with-standard-C.patch \
            file://0001-debuginfod-fix-compilation-on-platforms-without-erro.patch \
            file://0001-debuginfod-debuginfod-client.c-use-long-for-cache-ti.patch \
+           file://CVE-2025-1352.patch \
+           file://CVE-2025-1372.patch \
            "
 SRC_URI:append:libc-musl = " \
            file://0003-musl-utils.patch \
@@ -34,6 +36,8 @@ inherit autotools gettext ptest pkgconfig
 PTEST_ENABLED:libc-musl = "0"
 
 EXTRA_OECONF = "--program-prefix=eu-"
+
+BUILD_CFLAGS += "-Wno-error=stringop-overflow"
 
 DEPENDS_BZIP2 = "bzip2-replacement-native"
 DEPENDS_BZIP2:class-target = "bzip2"

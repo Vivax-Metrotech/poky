@@ -29,6 +29,23 @@ SRC_URI = "http://cache.ruby-lang.org/pub/ruby/${SHRT_VER}/ruby-${PV}.tar.gz \
            file://0005-Mark-Gemspec-reproducible-change-fixing-784225-too.patch \
            file://0006-Make-gemspecs-reproducible.patch \
            file://0001-vm_dump.c-Define-REG_S1-and-REG_S2-for-musl-riscv.patch \
+           file://CVE-2023-28756.patch \
+           file://CVE-2023-28755.patch \
+           file://CVE-2023-36617_1.patch \
+           file://CVE-2023-36617_2.patch \
+           file://CVE-2024-27281.patch \
+           file://CVE-2024-27280.patch \
+           file://CVE-2024-27282.patch \
+           file://CVE-2024-49761-0001.patch \
+           file://CVE-2024-49761-0002.patch \
+           file://CVE-2024-49761-0003.patch \
+           file://CVE-2024-49761-0004.patch \
+           file://CVE-2024-49761-0005.patch \
+           file://CVE-2024-49761-0006.patch \
+           file://CVE-2024-49761-0007.patch \
+           file://CVE-2024-49761-0008.patch \
+           file://CVE-2024-49761-0009.patch \
+           file://CVE-2024-41946.patch \
            "
 UPSTREAM_CHECK_URI = "https://www.ruby-lang.org/en/downloads/"
 
@@ -69,6 +86,7 @@ EXTRA_OECONF = "\
     --enable-load-relative \
     --with-pkg-config=pkg-config \
     --with-static-linked-ext \
+    --with-mantype=man \
 "
 
 EXTRA_OECONF:append:libc-musl = "\

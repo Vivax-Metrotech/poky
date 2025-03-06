@@ -68,17 +68,6 @@ things we do within the build system to ensure reproducibility include:
 -  Filtering the tools available from the host's ``PATH`` to only a specific set
    of tools, set using the :term:`HOSTTOOLS` variable.
 
-.. note::
-
-   Because of an open bug in GCC, using ``DISTRO_FEATURES:append = " lto"`` or
-   adding ``-flto`` (Link Time Optimization) to ``CFLAGS`` makes the resulting
-   binary non-reproducible, in that it depends on the full absolute build path
-   to ``recipe-sysroot-native``, so installing the Yocto Project in a different
-   directory results in a different binary.
-
-   This issue is addressed by
-   :yocto_bugs:`bug 14481 -  Programs built with -flto are not reproducible</show_bug.cgi?id=14481>`.
-
 =========================================
 Can we prove the project is reproducible?
 =========================================
@@ -102,11 +91,21 @@ run::
 
    oe-selftest -r reproducible.ReproducibleTests.test_reproducible_builds
 
-This defaults to including a ``world`` build so, if other layers are added, it would
-also run the tests for recipes in the additional layers. The first build will be
-run using :ref:`Shared State <overview-manual/concepts:Shared State>` if
-available, the second build explicitly disables
-:ref:`Shared State <overview-manual/concepts:Shared State>` and builds on the
+This defaults to including a ``world`` build so, if other layers are added, it
+would also run the tests for recipes in the additional layers. Different build
+targets can be defined using the :term:`OEQA_REPRODUCIBLE_TEST_TARGET` variable
+in ``local.conf``. For example, running reproducibility tests for only the
+``python3-numpy`` recipe can be done by setting::
+
+   OEQA_REPRODUCIBLE_TEST_TARGET = "python3-numpy"
+
+in local.conf before running the ``oe-selftest`` command shown above.
+
+Reproducibility builds the target list twice. The first build will be run using
+:ref:`Shared State <overview-manual/concepts:Shared State>` if available, the
+second build explicitly disables :ref:`Shared State
+<overview-manual/concepts:Shared State>` except for recipes defined in the
+:term:`OEQA_REPRODUCIBLE_TEST_SSTATE_TARGETS` variable, and builds on the
 specific host the build is running on. This means we can test reproducibility
 builds between different host distributions over time on the Autobuilder.
 
@@ -120,12 +119,8 @@ https://autobuilder.yocto.io/pub/repro-fail/ in the form ``oe-reproducible +
 The project's current reproducibility status can be seen at
 :yocto_home:`/reproducible-build-results/`
 
-You can also check the reproducibility status on supported host distributions:
-
--  CentOS: :yocto_ab:`/typhoon/#/builders/reproducible-centos`
--  Debian: :yocto_ab:`/typhoon/#/builders/reproducible-debian`
--  Fedora: :yocto_ab:`/typhoon/#/builders/reproducible-fedora`
--  Ubuntu: :yocto_ab:`/typhoon/#/builders/reproducible-ubuntu`
+You can also check the reproducibility status on the Autobuilder:
+:yocto_ab:`/valkyrie/#/builders/reproducible`.
 
 ===============================
 Can I test my layer or recipes?

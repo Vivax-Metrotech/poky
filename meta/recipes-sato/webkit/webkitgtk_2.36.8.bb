@@ -15,6 +15,19 @@ SRC_URI = "https://www.webkitgtk.org/releases/${BP}.tar.xz \
            file://0001-Fix-build-without-opengl-or-es.patch \
            file://reproducibility.patch \
            file://0001-When-building-introspection-files-do-not-quote-CFLAG.patch \
+           file://CVE-2022-32888.patch \
+           file://CVE-2022-32923.patch \
+           file://CVE-2022-46691.patch \
+           file://CVE-2022-46699.patch \
+           file://CVE-2022-42867.patch \
+           file://CVE-2022-46700.patch \
+           file://CVE-2023-23529.patch \
+           file://CVE-2022-48503.patch \
+           file://CVE-2023-32439.patch \
+           file://CVE-2024-40779.patch \
+           file://0d3344e17d258106617b0e6d783d073b188a2548.patch \
+           file://CVE-2024-40776.patch \
+           file://CVE-2024-40780.patch \
            "
 SRC_URI[sha256sum] = "0ad9fb6bf28308fe3889faf184bd179d13ac1b46835d2136edbab2c133d00437"
 
@@ -25,7 +38,7 @@ REQUIRED_DISTRO_FEATURES = "${@bb.utils.contains('DISTRO_FEATURES', 'wayland', '
 
 CVE_PRODUCT = "webkitgtk webkitgtk\+"
 
-DEPENDS = " \
+DEPENDS += " \
           ruby-native \
           gperf-native \
           cairo \
@@ -88,6 +101,10 @@ EXTRA_OECMAKE = " \
                 -DENABLE_BUBBLEWRAP_SANDBOX=OFF \
                 -DENABLE_GAMEPAD=OFF \
 		"
+
+# Unless DEBUG_BUILD is enabled, pass -g1 to massively reduce the size of the
+# debug symbols (4.3GB to 700M at time of writing)
+DEBUG_FLAGS:append = "${@oe.utils.vartrue('DEBUG_BUILD', '', ' -g1', d)}"
 
 # Javascript JIT is not supported on ARC
 EXTRA_OECMAKE:append:arc = " -DENABLE_JIT=OFF "

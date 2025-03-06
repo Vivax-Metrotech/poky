@@ -269,6 +269,10 @@ python extend_recipe_sysroot() {
     pn = d.getVar("PN")
     stagingdir = d.getVar("STAGING_DIR")
     sharedmanifests = d.getVar("COMPONENTS_DIR") + "/manifests"
+    # only needed by multilib cross-canadian since it redefines RECIPE_SYSROOT
+    manifestprefix = d.getVar("RECIPE_SYSROOT_MANIFEST_SUBDIR")
+    if manifestprefix:
+        sharedmanifests = sharedmanifests + "/" + manifestprefix
     recipesysroot = d.getVar("RECIPE_SYSROOT")
     recipesysrootnative = d.getVar("RECIPE_SYSROOT_NATIVE")
 
@@ -644,7 +648,7 @@ python staging_taskhandler() {
     bbtasks = e.tasklist
     for task in bbtasks:
         deps = d.getVarFlag(task, "depends")
-        if task == "do_configure" or (deps and "populate_sysroot" in deps):
+        if task != 'do_prepare_recipe_sysroot' and (task == "do_configure" or (deps and "populate_sysroot" in deps)):
             d.prependVarFlag(task, "prefuncs", "extend_recipe_sysroot ")
 }
 staging_taskhandler[eventmask] = "bb.event.RecipeTaskPreProcess"
