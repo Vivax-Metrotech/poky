@@ -21,6 +21,28 @@ SRC_URI = "https://www.x.org/archive/individual/xserver/xwayland-${PV}.tar.xz \
            file://CVE-2024-0229-2.patch \
            file://CVE-2024-0229-3.patch \
            file://CVE-2024-0229-4.patch \
+           file://CVE-2024-21885.patch \
+           file://CVE-2024-21886-1.patch \
+           file://CVE-2024-21886-2.patch \
+           file://CVE-2024-31080.patch \
+           file://CVE-2024-31081.patch \
+           file://CVE-2024-31083-0001.patch \
+           file://CVE-2024-31083-0002.patch \
+           file://CVE-2024-9632.patch \
+           file://CVE-2025-26594-1.patch \
+           file://CVE-2025-26594-2.patch \
+           file://CVE-2025-26595.patch \
+           file://CVE-2025-26596.patch \
+           file://CVE-2025-26597.patch \
+           file://CVE-2025-26598.patch \
+           file://CVE-2025-26599-1.patch \
+           file://CVE-2025-26599-2.patch \
+           file://CVE-2025-26600.patch \
+           file://CVE-2025-26601-1.patch \
+           file://CVE-2025-26601-2.patch \
+           file://CVE-2025-26601-3.patch \
+           file://CVE-2025-26601-4.patch \
+           file://CVE-2022-49737.patch \
 "
 SRC_URI[sha256sum] = "d11eeee73290b88ea8da42a7d9350dedfaba856ce4ae44e58c045ad9ecaa2f73"
 
