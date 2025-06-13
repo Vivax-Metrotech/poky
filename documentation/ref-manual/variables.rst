@@ -231,6 +231,12 @@ system and gives an overview of their function and contents.
       must set this variable in your recipe. The
       :ref:`syslinux <ref-classes-syslinux>` class checks this variable.
 
+   :term:`AUTOTOOLS_SCRIPT_PATH`
+      When using the :ref:`ref-classes-autotools` class, the
+      :term:`AUTOTOOLS_SCRIPT_PATH` variable stores the location of the
+      different scripts used by the Autotools build system. The default
+      value for this variable is :term:`S`.
+
    :term:`AVAILTUNES`
       The list of defined CPU and Application Binary Interface (ABI)
       tunings (i.e. "tunes") available for use by the OpenEmbedded build
@@ -1332,6 +1338,17 @@ system and gives an overview of their function and contents.
    :term:`CONFIGURE_FLAGS`
       The minimal arguments for GNU configure.
 
+   :term:`CONFIGURE_SCRIPT`
+      When using the :ref:`ref-classes-autotools` class, the
+      :term:`CONFIGURE_SCRIPT` variable stores the location of the ``configure``
+      script for the Autotools build system. The default definition for this
+      variable is::
+
+         CONFIGURE_SCRIPT ?= "${AUTOTOOLS_SCRIPT_PATH}/configure"
+
+      Where :term:`AUTOTOOLS_SCRIPT_PATH` is the location of the of the
+      Autotools build system scripts, which defaults to :term:`S`.
+
    :term:`CONFLICT_DISTRO_FEATURES`
       When inheriting the
       :ref:`features_check <ref-classes-features_check>`
@@ -1789,7 +1806,7 @@ system and gives an overview of their function and contents.
       ``${TMPDIR}/deploy``.
 
       For more information on the structure of the Build Directory, see
-      ":ref:`ref-manual/structure:the build directory --- \`\`build/\`\``" section.
+      ":ref:`ref-manual/structure:the build directory --- ``build/```" section.
       For more detail on the contents of the ``deploy`` directory, see the
       ":ref:`overview-manual/concepts:images`",
       ":ref:`overview-manual/concepts:package feeds`", and
@@ -1833,7 +1850,7 @@ system and gives an overview of their function and contents.
       <ref-classes-image>` class.
 
       For more information on the structure of the Build Directory, see
-      ":ref:`ref-manual/structure:the build directory --- \`\`build/\`\``" section.
+      ":ref:`ref-manual/structure:the build directory --- ``build/```" section.
       For more detail on the contents of the ``deploy`` directory, see the
       ":ref:`overview-manual/concepts:images`" and
       ":ref:`overview-manual/concepts:application development sdk`" sections both in
@@ -3600,6 +3617,36 @@ system and gives an overview of their function and contents.
 
          IMAGE_ROOTFS_EXTRA_SPACE = "41943040"
 
+   :term:`IMAGE_ROOTFS_MAXSIZE`
+      Defines the maximum allowed size of the generated image in kilobytes.
+      The build will fail if the generated image size exceeds this value.
+
+      The generated image size undergoes several calculation steps before being
+      compared to :term:`IMAGE_ROOTFS_MAXSIZE`.
+      In the first step, the size of the directory pointed to by :term:`IMAGE_ROOTFS`
+      is calculated.
+      In the second step, the result from the first step is multiplied
+      by :term:`IMAGE_OVERHEAD_FACTOR`.
+      In the third step, the result from the second step is compared with
+      :term:`IMAGE_ROOTFS_SIZE`. The larger value of these is added to
+      :term:`IMAGE_ROOTFS_EXTRA_SPACE`.
+      In the fourth step, the result from the third step is checked for
+      a decimal part. If it has one, it is rounded up to the next integer.
+      If it does not, it is simply converted into an integer.
+      In the fifth step, the :term:`IMAGE_ROOTFS_ALIGNMENT` is added to the result
+      from the fourth step and "1" is subtracted.
+      In the sixth step, the remainder of the division between the result
+      from the fifth step and :term:`IMAGE_ROOTFS_ALIGNMENT` is subtracted from the
+      result of the fifth step. In this way, the result from the fourth step is
+      rounded up to the nearest multiple of :term:`IMAGE_ROOTFS_ALIGNMENT`.
+
+      Thus, if the :term:`IMAGE_ROOTFS_MAXSIZE` is set, is compared with the result
+      of the above calculations and is independent of the final image type.
+      No default value is set for :term:`IMAGE_ROOTFS_MAXSIZE`.
+
+      It's a good idea to set this variable for images that need to fit on a limited
+      space (e.g. SD card, a fixed-size partition, ...).
+
    :term:`IMAGE_ROOTFS_SIZE`
       Defines the size in Kbytes for the generated image. The OpenEmbedded
       build system determines the final size for the generated image using
@@ -3805,6 +3852,23 @@ system and gives an overview of their function and contents.
       Set the variable to "1" to prevent the default dependencies from
       being added.
 
+   :term:`INHIBIT_DEFAULT_RUST_DEPS`
+      Prevents the :ref:`ref-classes-rust` class from automatically adding
+      its default build-time dependencies.
+
+      When a recipe inherits the :ref:`ref-classes-rust` class, several
+      tools such as ``rust-native`` and ``${RUSTLIB_DEP}`` (only added when cross-compiling) are added
+      to :term:`DEPENDS` to support the ``rust`` build process.
+
+      To prevent the build system from adding these dependencies automatically,
+      set the :term:`INHIBIT_DEFAULT_RUST_DEPS` variable as follows::
+
+         INHIBIT_DEFAULT_RUST_DEPS = "1"
+
+      By default, the value of :term:`INHIBIT_DEFAULT_RUST_DEPS` is empty. Setting
+      it to "0" does not disable inhibition. Only the empty string will disable
+      inhibition.
+
    :term:`INHIBIT_PACKAGE_DEBUG_SPLIT`
       Prevents the OpenEmbedded build system from splitting out debug
       information during packaging. By default, the build system splits out
@@ -3851,6 +3915,25 @@ system and gives an overview of their function and contents.
          bare-metal firmware by using an external GCC toolchain. Furthermore,
          even if the toolchain's binaries are strippable, there are other files
          needed for the build that are not strippable.
+
+   :term:`INHIBIT_UPDATERCD_BBCLASS`
+      Prevents the :ref:`ref-classes-update-rc.d` class from automatically
+      installing and registering SysV init scripts for packages.
+
+      When a recipe inherits the :ref:`ref-classes-update-rc.d` class, init
+      scripts are typically installed and registered for the packages listed in
+      :term:`INITSCRIPT_PACKAGES`. This ensures that the relevant
+      services are started and stopped at the appropriate runlevels using the
+      traditional SysV init system.
+
+      To prevent the build system from adding these scripts and configurations
+      automatically, set the :term:`INHIBIT_UPDATERCD_BBCLASS` variable as follows::
+
+         INHIBIT_UPDATERCD_BBCLASS = "1"
+
+      By default, the value of :term:`INHIBIT_UPDATERCD_BBCLASS` is empty. Setting
+      it to "0" does not disable inhibition. Only the empty string will disable
+      inhibition.
 
    :term:`INIT_MANAGER`
       Specifies the system init manager to use. Available options are:
@@ -3992,6 +4075,20 @@ system and gives an overview of their function and contents.
 
       See the :term:`MACHINE` variable for additional
       information.
+
+   :term:`INITRAMFS_MAXSIZE`
+      Defines the maximum allowed size of the :term:`Initramfs` image in Kbytes.
+      The build will fail if the :term:`Initramfs` image size exceeds this value.
+
+      The :term:`Initramfs` image size undergoes several calculation steps before
+      being compared to :term:`INITRAMFS_MAXSIZE`.
+      These steps are the same as those used for :term:`IMAGE_ROOTFS_MAXSIZE`
+      and are described in detail in that entry.
+
+      Thus, :term:`INITRAMFS_MAXSIZE` is compared with the result of the calculations
+      and is independent of the final image type (e.g. compressed).
+      A default value for :term:`INITRAMFS_MAXSIZE` is set in
+      :oe_git:`meta/conf/bitbake.conf </openembedded-core/tree/meta/conf/bitbake.conf>`.
 
    :term:`INITRAMFS_MULTICONFIG`
       Defines the multiconfig to create a multiconfig dependency to be used by the :ref:`kernel <ref-classes-kernel>` class.
@@ -4180,15 +4277,8 @@ system and gives an overview of their function and contents.
       options not explicitly specified will be disabled in the kernel
       config.
 
-      In case :term:`KCONFIG_MODE` is not set the behaviour will depend on where
-      the ``defconfig`` file is coming from. An "in-tree" ``defconfig`` file
-      will be handled in ``alldefconfig`` mode, a ``defconfig`` file placed
-      in ``${WORKDIR}`` through a meta-layer will be handled in
-      ``allnoconfig`` mode.
-
-      An "in-tree" ``defconfig`` file can be selected via the
-      :term:`KBUILD_DEFCONFIG` variable. :term:`KCONFIG_MODE` does not need to
-      be explicitly set.
+      In case :term:`KCONFIG_MODE` is not set the ``defconfig`` file
+      will be handled in ``allnoconfig`` mode.
 
       A ``defconfig`` file compatible with ``allnoconfig`` mode can be
       generated by copying the ``.config`` file from a working Linux kernel
@@ -6082,7 +6172,7 @@ system and gives an overview of their function and contents.
       For examples of how this data is used, see the
       ":ref:`overview-manual/concepts:automatically added runtime dependencies`"
       section in the Yocto Project Overview and Concepts Manual and the
-      ":ref:`dev-manual/debugging:viewing package information with \`\`oe-pkgdata-util\`\``"
+      ":ref:`dev-manual/debugging:viewing package information with ``oe-pkgdata-util```"
       section in the Yocto Project Development Tasks Manual. For more
       information on the shared, global-state directory, see
       :term:`STAGING_DIR_HOST`.
@@ -7700,7 +7790,7 @@ system and gives an overview of their function and contents.
       class.
 
    :term:`SPL_SIGN_KEYNAME`
-      The name of keys used by the :ref:`ref-classes-kernel-fitimage` class
+      The name of keys used by the :ref:`ref-classes-uboot-sign` class
       for signing U-Boot FIT image stored in the :term:`SPL_SIGN_KEYDIR`
       directory. If we have for example a ``dev.key`` key and a ``dev.crt``
       certificate stored in the :term:`SPL_SIGN_KEYDIR` directory, you will
@@ -7961,7 +8051,7 @@ system and gives an overview of their function and contents.
       The Yocto Project actually shares the cache data objects built by its
       autobuilder::
 
-         SSTATE_MIRRORS ?= "file://.* http://cdn.jsdelivr.net/yocto/sstate/all/PATH;downloadfilename=PATH"
+         SSTATE_MIRRORS ?= "file://.* http://sstate.yoctoproject.org/all/PATH;downloadfilename=PATH"
 
       As such binary artifacts are built for the generic QEMU machines
       supported by the various Poky releases, they are less likely to be
@@ -7986,6 +8076,26 @@ system and gives an overview of their function and contents.
 
       For details on the process, see the
       :ref:`staging <ref-classes-staging>` class.
+
+   :term:`SSTATE_SKIP_CREATION`
+      The :term:`SSTATE_SKIP_CREATION` variable can be used to skip the
+      creation of :ref:`shared state <overview-manual/concepts:shared state cache>`
+      tarball files. It makes sense e.g. for image creation tasks as tarring images
+      and keeping them in sstate would consume a lot of disk space.
+
+      In general it is not recommended to use this variable as missing sstate
+      artefacts adversely impact the build, particularly for entries in the
+      middle of dependency chains. The case it can make sense is where the
+      size and time costs of the artefact are similar to just running the
+      tasks. This generally only applies to end artefact output like images.
+
+      The syntax to disable it for one task is::
+
+         SSTATE_SKIP_CREATION:task-image-complete = "1"
+
+      The syntax to disable it for the whole recipe is::
+
+         SSTATE_SKIP_CREATION = "1"
 
    :term:`STAGING_BASE_LIBDIR_NATIVE`
       Specifies the path to the ``/lib`` subdirectory of the sysroot
@@ -8892,7 +9002,7 @@ system and gives an overview of their function and contents.
       :doc:`/sdk-manual/index` manual.
 
       Note that this variable applies to building an SDK, not an eSDK,
-      in which case the term:`TOOLCHAIN_HOST_TASK_ESDK` setting should be
+      in which case the :term:`TOOLCHAIN_HOST_TASK_ESDK` setting should be
       used instead.
 
    :term:`TOOLCHAIN_HOST_TASK_ESDK`
@@ -9561,6 +9671,20 @@ system and gives an overview of their function and contents.
       your distribution configuration file. For a list of the checks you
       can control with this variable, see the
       ":ref:`ref-classes-insane`" section.
+
+   :term:`WIC_CREATE_EXTRA_ARGS`
+      If the :term:`IMAGE_FSTYPES` variable contains "wic", the build
+      will generate a
+      :ref:`Wic image <dev-manual/wic:creating partitioned images using wic>`
+      automatically when BitBake builds an image recipe. As part of
+      this process BitBake will invoke the "`wic create`" command. The
+      :term:`WIC_CREATE_EXTRA_ARGS` variable is placed at the end of this
+      command which allows the user to supply additional arguments.
+
+      One such useful purpose for this mechanism is to add the ``-D`` (or
+      ``--debug``) argument to the "`wic create`" command. This increases the
+      amount of debugging information written out to the Wic log during the
+      Wic creation process.
 
    :term:`WKS_FILE`
       Specifies the location of the Wic kickstart file that is used by the
