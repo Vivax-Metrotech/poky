@@ -4,7 +4,7 @@ library which is used by many different programs."
 HOMEPAGE = "https://zlib.net/"
 SECTION = "libs"
 LICENSE = "Zlib"
-LIC_FILES_CHKSUM = "file://zlib.h;beginline=6;endline=23;md5=068c260be35209fb8458428c461dc536"
+LIC_FILES_CHKSUM = "file://zlib.h;beginline=6;endline=23;md5=5377232268e952e9ef63bc555f7aa6c0"
 
 # The source tarball needs to be .gz as only the .gz ends up in fossils/
 SRC_URI = "https://zlib.net/${BP}.tar.gz"
