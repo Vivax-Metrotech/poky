@@ -17,8 +17,9 @@ Allows for ASLR bypass so can bypass some hardening, not an exploit in itself, m
 easier access for another. 'ASLR bypass itself is not a vulnerability.'"
 
 CVE_STATUS_GROUPS += "CVE_STATUS_STABLE_BACKPORTS"
-CVE_STATUS_STABLE_BACKPORTS = "CVE-2024-2961 CVE-2024-33599 CVE-2024-33600 CVE-2024-33601 CVE-2024-33602 CVE-2025-0395 \
-    CVE-2025-4802 CVE-2025-5702 CVE-2025-8058 CVE-2025-15281 CVE-2026-0861 CVE-2026-0915"
+CVE_STATUS_STABLE_BACKPORTS = "CVE-2025-15281 CVE-2026-0861 CVE-2026-0915 CVE-2026-4437 CVE-2026-4438 \
+    CVE-2026-4046 \
+"
 CVE_STATUS_STABLE_BACKPORTS[status] = "cpe-stable-backport: fix available in used git hash"
 
 DEPENDS += "gperf-native bison-native"
@@ -28,9 +29,8 @@ NATIVESDKFIXES:class-nativesdk = "\
            file://0003-nativesdk-glibc-Look-for-host-system-ld.so.cache-as-.patch \
            file://0004-nativesdk-glibc-Fix-buffer-overrun-with-a-relocated-.patch \
            file://0005-nativesdk-glibc-Raise-the-size-of-arrays-containing-.patch \
-           file://0006-nativesdk-glibc-Allow-64-bit-atomics-for-x86.patch \
-           file://0007-nativesdk-glibc-Make-relocatable-install-for-locales.patch \
-           file://0008-nativesdk-glibc-Fall-back-to-faccessat-on-faccess2-r.patch \
+           file://0006-nativesdk-glibc-Make-relocatable-install-for-locales.patch \
+           file://0007-nativesdk-glibc-Fall-back-to-faccessat-on-faccess2-r.patch \
 "
 
 SRC_URI =  "${GLIBC_GIT_URI};branch=${SRCBRANCH};name=glibc \
@@ -39,25 +39,24 @@ SRC_URI =  "${GLIBC_GIT_URI};branch=${SRCBRANCH};name=glibc \
            file://makedbs.sh \
            \
            ${NATIVESDKFIXES} \
-           file://0009-yes-within-the-path-sets-wrong-config-variables.patch \
-           file://0010-eglibc-Cross-building-and-testing-instructions.patch \
-           file://0011-eglibc-Help-bootstrap-cross-toolchain.patch \
-           file://0012-eglibc-Resolve-__fpscr_values-on-SH4.patch \
-           file://0013-eglibc-Forward-port-cross-locale-generation-support.patch \
-           file://0014-localedef-add-to-archive-uses-a-hard-coded-locale-pa.patch \
-           file://0015-powerpc-Do-not-ask-compiler-for-finding-arch.patch \
-           file://0016-wordsize.h-Unify-the-header-between-arm-and-aarch64.patch \
-           file://0017-Replace-echo-with-printf-builtin-in-nscd-init-script.patch \
-           file://0018-sysdeps-gnu-configure.ac-Set-libc_cv_rootsbindir-onl.patch \
-           file://0019-timezone-Make-shell-interpreter-overridable-in-tzsel.patch \
-           file://0020-tzselect.ksh-Use-bin-sh-default-shell-interpreter.patch \
-           file://0021-fix-create-thread-failed-in-unprivileged-process-BZ-.patch \
-           file://0022-Avoid-hardcoded-build-time-paths-in-the-output-binar.patch \
-           file://0023-qemu-stale-process.patch \
-           file://0001-stdlib-Add-single-threaded-fast-path-to-rand.patch \
+           file://0009-eglibc-Cross-building-and-testing-instructions.patch \
+           file://0010-eglibc-Help-bootstrap-cross-toolchain.patch \
+           file://0011-eglibc-Resolve-__fpscr_values-on-SH4.patch \
+           file://0012-eglibc-Forward-port-cross-locale-generation-support.patch \
+           file://0013-localedef-add-to-archive-uses-a-hard-coded-locale-pa.patch \
+           file://0014-powerpc-Do-not-ask-compiler-for-finding-arch.patch \
+           file://0015-wordsize.h-Unify-the-header-between-arm-and-aarch64.patch \
+           file://0016-Replace-echo-with-printf-builtin-in-nscd-init-script.patch \
+           file://0017-sysdeps-gnu-configure.ac-Set-libc_cv_rootsbindir-onl.patch \
+           file://0018-timezone-Make-shell-interpreter-overridable-in-tzsel.patch \
+           file://0019-tzselect.ksh-Use-bin-sh-default-shell-interpreter.patch \
+           file://0020-fix-create-thread-failed-in-unprivileged-process-BZ-.patch \
+           file://0021-tests-Skip-2-qemu-tests-that-can-hang-in-oe-selftest.patch \
+           file://0022-Propagate-ffile-prefix-map-from-CFLAGS-to-ASFLAGS.patch \
+           file://0023-CVE-2026-5450.patch \
 "
-S = "${WORKDIR}/git"
 B = "${WORKDIR}/build-${TARGET_SYS}"
+S = "${WORKDIR}/git"
 
 PACKAGES_DYNAMIC = ""
 
@@ -81,7 +80,6 @@ EXTRA_OECONF = "--enable-kernel=${OLDEST_KERNEL} \
                 --with-default-link \
                 --disable-werror \
                 --enable-fortify-source \
-                ${@bb.utils.contains_any('SELECTED_OPTIMIZATION', '-O0 -Og', '--disable-werror', '', d)} \
                 ${GLIBCPIE} \
                 ${GLIBC_EXTRA_OECONF}"
 
@@ -89,7 +87,7 @@ EXTRA_OECONF += "${@get_libc_fpu_setting(bb, d)}"
 
 EXTRA_OECONF:append:x86-64 = " --enable-cet"
 
-PACKAGECONFIG ??= "nscd memory-tagging"
+PACKAGECONFIG ??= "memory-tagging"
 
 PACKAGECONFIG[nscd] = "--enable-nscd,--disable-nscd"
 PACKAGECONFIG[memory-tagging] = "--enable-memory-tagging,--disable-memory-tagging"
@@ -113,7 +111,7 @@ do_configure () {
 }
 
 LDFLAGS += "-fuse-ld=bfd"
-CC += "-fuse-ld=bfd"
+CFLAGS += "-fuse-ld=bfd"
 
 do_compile () {
 	base_do_compile
@@ -129,5 +127,16 @@ do_compile () {
 }
 
 require glibc-package.inc
+
+# When upgrading glibc it's important to know if there are any new symbols
+# that pseudo needs to wrap. In the future a generalised ABI comparison tool
+# would be good, but to solve the immediate need we can simply list the
+# exported symbols to files in WORKDIR.
+do_symlist() {
+    for LIB in ${D}${base_libdir}/lib*.so.*; do
+        ${NM} --dynamic $LIB | awk --source '$2 == "T" { print $3 }' | sort > ${WORKDIR}/$(basename $LIB)-${PV}.symbols
+    done
+}
+addtask symlist after do_install
 
 BBCLASSEXTEND = "nativesdk"

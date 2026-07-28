@@ -51,4 +51,37 @@ do_install:prepend () {
     install -d ${D}${bindir} ${D}${mandir}/man1
 }
 
+do_configure:prepend() {
+    python3 - <<'PY'
+from pathlib import Path
+
+path = Path("${S}/filan.c")
+text = path.read_text()
+replacement = r"""static int printtime(FILE *outfile, time_t time) {
+   const char *s;
+   char buf[64];
+   char *nl;
+
+   if (filan_rawoutput) {
+      fprintf(outfile, "\t"F_time, time);
+   } else {
+      fputc('\t', outfile);
+      s = asctime(localtime(&time));
+      snprintf(buf, sizeof(buf), "%s", s);
+      if ((nl = strchr(buf, '\n')) != NULL)
+         *nl = '\0';
+      fputs(buf, outfile);
+   }
+   return 0;
+}"""
+start = text.find("static int printtime(FILE *outfile, time_t time) {")
+if start == -1:
+    raise SystemExit("failed to locate printtime() start in filan.c")
+end = text.find("\n}\n", start)
+if end == -1:
+    raise SystemExit("failed to locate printtime() end in filan.c")
+path.write_text(text[:start] + replacement + text[end + 3:])
+PY
+}
+
 BBCLASSEXTEND = "native nativesdk"

@@ -1,0 +1,35 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenAI Codex <codex@openai.com>
+Date: Mon, 27 Jul 2026 10:25:00 +0000
+Subject: [PATCH] pam_inline: fix memset_explicit call for glibc 2.43
+
+glibc 2.43 exposes memset_explicit() with the standard three-argument
+signature:
+
+  memset_explicit(void *dest, int ch, size_t len)
+
+Linux-PAM 1.5.3 incorrectly calls it with only two arguments in
+pam_overwrite_n(), which causes compilation failures once the newer glibc
+headers are in the target sysroot.
+
+Upstream-Status: Submitted [compatibility fix for newer glibc headers]
+Signed-off-by: OpenAI Codex <codex@openai.com>
+---
+ libpam/include/pam_inline.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libpam/include/pam_inline.h b/libpam/include/pam_inline.h
+index 3f26b16..9b97327 100644
+--- a/libpam/include/pam_inline.h
++++ b/libpam/include/pam_inline.h
+@@ -84,7 +84,7 @@ pam_str_skip_icase_prefix_len(const char *str, const char *prefix, size_t prefix
+ static inline void pam_overwrite_n(void *ptr, size_t len)
+ {
+ 	if (ptr)
+-		memset_explicit(ptr, len);
++		memset_explicit(ptr, 0, len);
+ }
+ #elif defined HAVE_EXPLICIT_BZERO
+ static inline void pam_overwrite_n(void *ptr, size_t len)
+-- 
+2.43.0

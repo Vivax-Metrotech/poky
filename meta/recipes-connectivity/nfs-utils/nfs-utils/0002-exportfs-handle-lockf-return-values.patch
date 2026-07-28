@@ -1,0 +1,46 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Codex <codex@openai.com>
+Date: Mon, 27 Jul 2026 00:00:00 +0000
+Subject: [PATCH] exportfs: handle lockf return values
+
+Newer libc and compiler combinations mark lockf() with warn_unused_result.
+Handle failures explicitly so the build remains valid without changing
+runtime behavior beyond logging lock acquisition and release failures.
+
+Upstream-Status: Inappropriate [compatibility fix for current toolchain]
+Signed-off-by: Codex <codex@openai.com>
+---
+ utils/exportfs/exportfs.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/utils/exportfs/exportfs.c b/utils/exportfs/exportfs.c
+index a99cb2a..08b3b44 100644
+--- a/utils/exportfs/exportfs.c
++++ b/utils/exportfs/exportfs.c
+@@ -74,14 +74,21 @@ static void
+ grab_lockfile(void)
+ {
+ 	_lockfd = open(lockfile, O_CREAT|O_RDWR, 0666);
+-	if (_lockfd != -1)
+-		lockf(_lockfd, F_LOCK, 0);
++	if (_lockfd != -1) {
++		if (lockf(_lockfd, F_LOCK, 0) == -1)
++			xlog(L_ERROR, "Unable to lock %s: %m", lockfile);
++	}
+ }
+ static void
+ release_lockfile(void)
+ {
+ 	if (_lockfd != -1) {
+-		lockf(_lockfd, F_ULOCK, 0);
++		if (lockf(_lockfd, F_ULOCK, 0) == -1) {
++			xlog(L_ERROR, "Unable to unlock %s: %m", lockfile);
++			close(_lockfd);
++			_lockfd = -1;
++			return;
++		}
+ 		close(_lockfd);
+ 		_lockfd = -1;
+ 	}
+-- 
+2.34.1

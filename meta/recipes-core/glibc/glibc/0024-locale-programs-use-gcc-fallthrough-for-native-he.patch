@@ -1,0 +1,67 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenAI Codex <codex@openai.com>
+Date: Mon, 27 Jul 2026 09:45:00 +0000
+Subject: [PATCH] locale/programs: use GCC fallthrough attribute for native
+ helper build
+
+`cross-localedef-native` is built with the host compiler. On this build host
+that is GCC 9.5, which does not accept the C23-style `[[fallthrough]]`
+attribute used in glibc 2.43's locale parser sources. The generated keyword
+headers already contain GCC-version guards, but these two source files do not.
+
+Use the GCC/Clang fallthrough attribute in the two affected switch sites so
+the helper builds with older native compilers.
+
+Upstream-Status: Inappropriate [native host compiler compatibility]
+Signed-off-by: OpenAI Codex <codex@openai.com>
+---
+ locale/programs/charmap.c   | 4 ++--
+ locale/programs/repertoire.c | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/locale/programs/charmap.c b/locale/programs/charmap.c
+index d83d8fd..66a0d54 100644
+--- a/locale/programs/charmap.c
++++ b/locale/programs/charmap.c
+@@ -548,7 +548,7 @@ parse_charmap (struct linereader *cmfile, int verbose,
+ 	      state = 4;
+ 	      continue;
+ 	    }
+-	  [[fallthrough]];
++	  __attribute__ ((__fallthrough__));
+ 
+ 	case 5:
+ 	  if (nowtok != tok_charcode)
+@@ -712,7 +712,7 @@ parse_charmap (struct linereader *cmfile, int verbose,
+ 	      state = 95;
+ 	      continue;
+ 	    }
+-	  [[fallthrough]];
++	  __attribute__ ((__fallthrough__));
+ 
+ 	case 96:
+ 	  if (nowtok != tok_number)
+diff --git a/locale/programs/repertoire.c b/locale/programs/repertoire.c
+index 9630a7e..3442912 100644
+--- a/locale/programs/repertoire.c
++++ b/locale/programs/repertoire.c
+@@ -206,7 +206,7 @@ repertoire_read (struct linereader *repfile, struct charset_t *charset,
+ 
+ 	  /* Otherwise we start reading the character definitions.  */
+ 	  state = 2;
+-	  [[fallthrough]];
++	  __attribute__ ((__fallthrough__));
+ 
+ 	case 2:
+ 	  /* We are now are in the body.  Each line
+@@ -254,7 +254,7 @@ repertoire_read (struct linereader *repfile, struct charset_t *charset,
+ 	      state = 4;
+ 	      continue;
+ 	    }
+-	  [[fallthrough]];
++	  __attribute__ ((__fallthrough__));
+ 
+ 	case 5:
+ 	  /* We expect a value of the form <Uxxxx> or <Uxxxxxxxx> where
+-- 
+2.43.0
