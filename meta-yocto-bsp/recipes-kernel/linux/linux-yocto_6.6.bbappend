@@ -19,3 +19,5 @@ SRCREV_machine:beaglebone-yocto ?= "06644f0d7193d7ec39d7fe41939a21953e7a0c65"
 LINUX_VERSION:genericx86 = "6.6.21"
 LINUX_VERSION:genericx86-64 = "6.6.21"
 LINUX_VERSION:beaglebone-yocto = "6.6.21"
+
+require fls/linux-yocto_6.6.inc

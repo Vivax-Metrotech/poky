@@ -1,0 +1,3 @@
+define KFEATURE_DESCRIPTION "Final FLS BeagleBone production configuration"
+define KFEATURE_COMPATIBILITY board
+kconf non-hardware flsfragments.cfg

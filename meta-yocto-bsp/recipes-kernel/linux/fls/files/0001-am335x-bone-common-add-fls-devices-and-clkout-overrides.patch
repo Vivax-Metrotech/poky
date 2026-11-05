@@ -1,0 +1,36 @@
+Upstream-Status: Inappropriate [legacy hardware enablement for FLS platform]
+
+--- a/arch/arm/boot/dts/ti/omap/am335x-bone-common.dtsi
++++ b/arch/arm/boot/dts/ti/omap/am335x-bone-common.dtsi
+@@ -99,7 +99,13 @@
+ 
+ 	clkout2_pin: clkout2-pins {
+ 		pinctrl-single,pins = <
+-			AM33XX_PADCONF(AM335X_PIN_XDMA_EVENT_INTR1, PIN_OUTPUT_PULLDOWN, MUX_MODE3)	/* xdma_event_intr1.clkout2 */
++			AM33XX_PADCONF(AM335X_PIN_XDMA_EVENT_INTR1, PIN_OUTPUT_PULLDOWN, MUX_MODE7)	/* xdma_event_intr1.gpio0_20 */
++		>;
++	};
++
++	fls_common_pins: fls-common-pins {
++		pinctrl-single,pins = <
++			AM33XX_PADCONF(AM335X_PIN_GPMC_ADVN_ALE, PIN_INPUT_PULLUP, MUX_MODE7)	/* gpmc_advn_ale.gpio0_2 */
+ 		>;
+ 	};
+ 
+@@ -231,6 +237,16 @@
+ 			};
+ 		};
+ 	};
++
++	fls_eeprom: eeprom@51 {
++		compatible = "atmel,24c32";
++		reg = <0x51>;
++	};
++
++	fls_rtc: rtc@6f {
++		compatible = "isil,isl1208";
++		reg = <0x6f>;
++	};
+ };
+ 
+ &i2c2 {

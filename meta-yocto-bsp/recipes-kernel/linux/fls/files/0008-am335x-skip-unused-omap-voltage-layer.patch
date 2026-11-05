@@ -1,0 +1,20 @@
+Subject: [PATCH] ARM: OMAP2+: skip unused legacy voltage init on AM335x
+
+AM335x does not populate the legacy OMAP voltage-domain list. Its regulator
+and OPP drivers handle voltage control independently of this initialization.
+
+Upstream-Status: Inappropriate [AM335x board-specific integration]
+
+--- a/arch/arm/mach-omap2/pm.c
++++ b/arch/arm/mach-omap2/pm.c
+@@ -145,7 +145,9 @@
+ 	omap3_twl_init();
+ 	omap4_twl_init();
+ 	omap4_cpcap_init();
+-	omap_voltage_late_init();
++	/* AM335x uses regulator/OPP control, not legacy OMAP voltage domains. */
++	if (!soc_is_am33xx())
++		omap_voltage_late_init();
+ 
+ 	/* Smartreflex device init */
+ 	omap_devinit_smartreflex();

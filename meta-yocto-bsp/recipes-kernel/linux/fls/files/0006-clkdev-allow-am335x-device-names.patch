@@ -1,0 +1,13 @@
+Subject: [PATCH] clkdev: accommodate AM335x interconnect device names
+
+AM335x clock aliases include interconnect paths longer than 24 bytes.
+Keep the complete device ID instead of installing an unusable "bad" alias.
+
+Upstream-Status: Submitted [https://lists.openwall.net/linux-kernel/2025/11/14/616]
+
+--- a/drivers/clk/clkdev.c
++++ b/drivers/clk/clkdev.c
+@@ -147,2 +147,2 @@
+-#define MAX_DEV_ID	24
++#define MAX_DEV_ID	64
+ #define MAX_CON_ID	16

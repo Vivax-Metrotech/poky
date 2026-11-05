@@ -1,0 +1,24 @@
+Subject: [PATCH] ARM: dts: am33xx: fix early timer OCP dependencies
+
+The system timers initialize before the OCP supplier. Describe that ordering
+without changing the timer clocks or disabling firmware dependency tracking.
+
+Upstream-Status: Submitted [https://lkml.iu.edu/2606.3/02992.html]
+
+--- a/arch/arm/boot/dts/ti/omap/am33xx.dtsi
++++ b/arch/arm/boot/dts/ti/omap/am33xx.dtsi
+@@ -709,6 +709,7 @@
+ 	timer@0 {
+ 		assigned-clocks = <&timer1_fck>;
+ 		assigned-clock-parents = <&sys_clkin_ck>;
++		post-init-providers = <&ocp>;
+ 	};
+ };
+ 
+@@ -723,5 +724,6 @@
+ 	timer@0 {
+ 		assigned-clocks = <&timer2_fck>;
+ 		assigned-clock-parents = <&sys_clkin_ck>;
++		post-init-providers = <&ocp>;
+ 	};
+ };

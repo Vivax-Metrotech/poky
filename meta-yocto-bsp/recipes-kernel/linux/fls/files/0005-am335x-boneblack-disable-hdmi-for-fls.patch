@@ -1,0 +1,15 @@
+Upstream-Status: Inappropriate [FLS uses the HDMI pins for UARTs and GPIOs]
+
+Match the legacy FLS Black tree, which removed LCDC, the HDMI bridge, audio,
+and their pinctrl/clock consumers. These now live in a separate include.
+
+--- a/arch/arm/boot/dts/ti/omap/am335x-boneblack.dts
++++ b/arch/arm/boot/dts/ti/omap/am335x-boneblack.dts
+@@ -7,7 +7,6 @@
+ #include "am33xx.dtsi"
+ #include "am335x-bone-common.dtsi"
+ #include "am335x-boneblack-common.dtsi"
+-#include "am335x-boneblack-hdmi.dtsi"
+ 
+ / {
+ 	model = "TI AM335x BeagleBone Black";
