@@ -1,0 +1,155 @@
+Subject: [PATCH] linux-user: preserve guest fcntl lock ABIs with portable host types
+
+The host LFS64 portability patch must not remove the guest F_GETLK64,
+F_SETLK64 and F_SETLKW64 command mappings or merge the guest flock and
+flock64 layouts. ARM EABI programs built with 64-bit file offsets otherwise
+receive EINVAL for F_SETLK64; OFD locks also use the wrong guest layout.
+
+Retain the portable host struct flock and unsuffixed host commands, whose
+offsets are 64-bit in this build, but restore separate guest translations and
+the ARM OABI dispatch for the large-file commands.
+
+Upstream-Status: Pending
+---
+diff --git a/linux-user/syscall.c b/linux-user/syscall.c
+--- a/linux-user/syscall.c
++++ b/linux-user/syscall.c
+@@ -6765,6 +6765,17 @@ static int target_to_host_fcntl_cmd(int cmd)
+     case TARGET_F_SETSIG:
+         ret = F_SETSIG;
+         break;
++#if TARGET_ABI_BITS == 32
++    case TARGET_F_GETLK64:
++        ret = F_GETLK;
++        break;
++    case TARGET_F_SETLK64:
++        ret = F_SETLK;
++        break;
++    case TARGET_F_SETLKW64:
++        ret = F_SETLKW;
++        break;
++#endif
+     case TARGET_F_SETLEASE:
+         ret = F_SETLEASE;
+         break;
+@@ -6951,6 +6962,50 @@ static inline abi_long copy_to_user_flock(abi_ulong target_flock_addr,
+     return 0;
+ }
+ 
++/* Host flock uses 64-bit offsets; the guest ABI still has distinct layouts. */
++static inline abi_long copy_from_user_flock64(struct flock *fl,
++                                             abi_ulong target_flock_addr)
++{
++    struct target_flock64 *target_fl;
++    int l_type;
++
++    if (!lock_user_struct(VERIFY_READ, target_fl, target_flock_addr, 1)) {
++        return -TARGET_EFAULT;
++    }
++    __get_user(l_type, &target_fl->l_type);
++    l_type = target_to_host_flock(l_type);
++    if (l_type < 0) {
++        unlock_user_struct(target_fl, target_flock_addr, 0);
++        return l_type;
++    }
++    fl->l_type = l_type;
++    __get_user(fl->l_whence, &target_fl->l_whence);
++    __get_user(fl->l_start, &target_fl->l_start);
++    __get_user(fl->l_len, &target_fl->l_len);
++    __get_user(fl->l_pid, &target_fl->l_pid);
++    unlock_user_struct(target_fl, target_flock_addr, 0);
++    return 0;
++}
++
++static inline abi_long copy_to_user_flock64(abi_ulong target_flock_addr,
++                                           const struct flock *fl)
++{
++    struct target_flock64 *target_fl;
++    short l_type;
++
++    if (!lock_user_struct(VERIFY_WRITE, target_fl, target_flock_addr, 0)) {
++        return -TARGET_EFAULT;
++    }
++    l_type = host_to_target_flock(fl->l_type);
++    __put_user(l_type, &target_fl->l_type);
++    __put_user(fl->l_whence, &target_fl->l_whence);
++    __put_user(fl->l_start, &target_fl->l_start);
++    __put_user(fl->l_len, &target_fl->l_len);
++    __put_user(fl->l_pid, &target_fl->l_pid);
++    unlock_user_struct(target_fl, target_flock_addr, 1);
++    return 0;
++}
++
+ static abi_long do_fcntl(int fd, int cmd, abi_ulong arg)
+ {
+     struct flock fl64;
+@@ -6966,7 +7021,6 @@ static abi_long do_fcntl(int fd, int cmd, abi_ulong arg)
+ 
+     switch(cmd) {
+     case TARGET_F_GETLK:
+-    case TARGET_F_OFD_GETLK:
+         ret = copy_from_user_flock(&fl64, arg);
+         if (ret) {
+             return ret;
+@@ -6978,9 +7032,29 @@ static abi_long do_fcntl(int fd, int cmd, abi_ulong arg)
+         break;
+     case TARGET_F_SETLK:
+     case TARGET_F_SETLKW:
++        ret = copy_from_user_flock(&fl64, arg);
++        if (ret) {
++            return ret;
++        }
++        ret = get_errno(safe_fcntl(fd, host_cmd, &fl64));
++        break;
++
++    case TARGET_F_GETLK64:
++    case TARGET_F_OFD_GETLK:
++        ret = copy_from_user_flock64(&fl64, arg);
++        if (ret) {
++            return ret;
++        }
++        ret = get_errno(safe_fcntl(fd, host_cmd, &fl64));
++        if (ret == 0) {
++            ret = copy_to_user_flock64(arg, &fl64);
++        }
++        break;
++    case TARGET_F_SETLK64:
++    case TARGET_F_SETLKW64:
+     case TARGET_F_OFD_SETLK:
+     case TARGET_F_OFD_SETLKW:
+-        ret = copy_from_user_flock(&fl64, arg);
++        ret = copy_from_user_flock64(&fl64, arg);
+         if (ret) {
+             return ret;
+         }
+@@ -12252,8 +12326,8 @@ static abi_long do_syscall1(CPUArchState *cpu_env, int num, abi_long arg1,
+     {
+         int cmd;
+         struct flock fl;
+-        from_flock_fn *copyfrom = copy_from_user_flock;
+-        to_flock_fn *copyto = copy_to_user_flock;
++        from_flock_fn *copyfrom = copy_from_user_flock64;
++        to_flock_fn *copyto = copy_to_user_flock64;
+ 
+ #ifdef TARGET_ARM
+         if (!cpu_env->eabi) {
+@@ -12268,7 +12342,7 @@ static abi_long do_syscall1(CPUArchState *cpu_env, int num, abi_long arg1,
+         }
+ 
+         switch(arg2) {
+-        case TARGET_F_GETLK:
++        case TARGET_F_GETLK64:
+             ret = copyfrom(&fl, arg3);
+             if (ret) {
+                 break;
+@@ -12279,8 +12353,8 @@ static abi_long do_syscall1(CPUArchState *cpu_env, int num, abi_long arg1,
+             }
+ 	    break;
+ 
+-        case TARGET_F_SETLK:
+-        case TARGET_F_SETLKW:
++        case TARGET_F_SETLK64:
++        case TARGET_F_SETLKW64:
+             ret = copyfrom(&fl, arg3);
+             if (ret) {
+                 break;
