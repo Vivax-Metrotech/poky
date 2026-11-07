@@ -54,6 +54,7 @@ SRC_URI = "https://download.qemu.org/${BPN}-${PV}.tar.xz \
            file://CVE-2026-2243.patch \
            file://0001-linux-user-close-truncated-received-rights.patch \
            file://0002-linux-user-preserve-guest-fcntl-lock-abis.patch \
+           file://0003-linux-user-preserve-kernel-process-starttime.patch \
            "
 UPSTREAM_CHECK_REGEX = "qemu-(?P<pver>\d+(\.\d+)+)\.tar"
 

@@ -1,0 +1,80 @@
+Subject: [PATCH] linux-user: preserve kernel process identity in self stat
+
+The synthetic /proc/self/stat uses TaskState.start_boottime, recorded after
+QEMU initialization, rather than the kernel's process start time. A peer
+reading /proc/<pid>/stat consequently observes a different starttime for the
+same live PID. Exec preserves a Linux process identity; emulation must not
+substitute its own initialization timestamp for that identity field.
+
+Read field 22 from host procfs when generating self stat, including after
+fork. Locate the final comm delimiter before walking fields so spaces and
+parentheses in comm do not alter parsing. Fail the observation if procfs
+cannot supply a valid positive starttime instead of returning a fabricated
+identity. Other synthetic guest fields are unchanged.
+
+Upstream-Status: Pending
+---
+diff --git a/linux-user/syscall.c b/linux-user/syscall.c
+--- a/linux-user/syscall.c
++++ b/linux-user/syscall.c
+@@ -8172,13 +8172,51 @@ static int open_self_smaps(CPUArchState *cpu_env, int fd)
+     return open_self_maps_1(cpu_env, fd, true);
+ }
+ 
++static int self_stat_starttime(uint64_t *starttime)
++{
++    g_autofree char *record = NULL;
++    const char *field, *end;
++    int i;
++
++    if (!g_file_get_contents("/proc/self/stat", &record, NULL, NULL)) {
++        errno = EIO;
++        return -1;
++    }
++    field = strrchr(record, ')');
++    if (!field || field[1] != ' ') {
++        errno = EIO;
++        return -1;
++    }
++    field += 2; /* Field 3 follows the final comm delimiter. */
++    for (i = 3; i < 22; i++) {
++        field = strchr(field, ' ');
++        if (!field) {
++            errno = EIO;
++            return -1;
++        }
++        field++;
++    }
++    if (*field < '0' || *field > '9' ||
++        qemu_strtou64(field, &end, 10, starttime) ||
++        *end != ' ' || !*starttime) {
++        errno = EIO;
++        return -1;
++    }
++    return 0;
++}
++
+ static int open_self_stat(CPUArchState *cpu_env, int fd)
+ {
+     CPUState *cpu = env_cpu(cpu_env);
+     TaskState *ts = cpu->opaque;
+     g_autoptr(GString) buf = g_string_new(NULL);
++    uint64_t starttime;
+     int i;
+ 
++    if (self_stat_starttime(&starttime) < 0) {
++        return -1;
++    }
++
+     for (i = 0; i < 44; i++) {
+         if (i == 0) {
+             /* pid */
+@@ -8196,7 +8234,7 @@ static int open_self_stat(CPUArchState *cpu_env, int fd)
+             g_string_printf(buf, FMT_pid " ", getppid());
+         } else if (i == 21) {
+             /* starttime */
+-            g_string_printf(buf, "%" PRIu64 " ", ts->start_boottime);
++            g_string_printf(buf, "%" PRIu64 " ", starttime);
+         } else if (i == 27) {
+             /* stack bottom */
+             g_string_printf(buf, TARGET_ABI_FMT_ld " ", ts->info->start_stack);
