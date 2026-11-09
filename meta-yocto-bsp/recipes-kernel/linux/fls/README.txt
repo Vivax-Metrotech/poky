@@ -25,3 +25,10 @@ No proprietary application source or signing keys are needed to build
 the kernel. Enable meta and meta-yocto-bsp, select beaglebone-yocto and
 linux-yocto 6.18, and run bitbake virtual/kernel. Preserve the effective
 kernel .config with each distributed binary release.
+
+Watchdog sysfs diagnostics are enabled so state, timeout and time remaining
+can be read without opening or feeding /dev/watchdog. This does not change
+the existing owner, 60-second driver default or CONFIG_WATCHDOG_NOWAYOUT=n.
+Do not write sysfs policy attributes during fault observation. A bootstatus
+value of zero does not prove that a preceding watchdog reset did not occur:
+the OMAP driver's reset-source callback is platform-data dependent.
