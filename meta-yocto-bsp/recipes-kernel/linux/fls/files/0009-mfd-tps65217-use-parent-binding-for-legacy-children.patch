@@ -1,0 +1,30 @@
+Subject: [PATCH] mfd: tps65217: do not match nonexistent legacy child compatibles
+
+The regulator binding describes regulators below the ti,tps65217 parent,
+and the backlight binding describes a named backlight child without a
+compatible property. Their drivers already look up these nodes through
+the parent TPS device. Neither binding defines ti,tps65217-pmic or
+ti,tps65217-bl.
+
+Do not ask the MFD core to find those nonexistent compatible children.
+This avoids its "Failed to locate of_node" warnings on BeagleBone Black
+without inventing DT nodes or suppressing legitimate match failures.
+Keep the charger and power-button compatible matches and resources.
+
+Upstream-Status: Pending
+Signed-off-by: Johan Overby <johan.overby@vxmt.com>
+
+--- a/drivers/mfd/tps65217.c
++++ b/drivers/mfd/tps65217.c
+@@ -80,11 +80,9 @@
+ static struct mfd_cell tps65217s[] = {
+ 	{
+ 		.name = "tps65217-pmic",
+-		.of_compatible = "ti,tps65217-pmic",
+ 	},
+ 	{
+ 		.name = "tps65217-bl",
+-		.of_compatible = "ti,tps65217-bl",
+ 	},
+ 	{
+ 		.name = "tps65217-charger",

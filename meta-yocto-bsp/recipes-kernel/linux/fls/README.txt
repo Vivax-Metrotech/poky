@@ -20,6 +20,7 @@ Patch inventory:
 0006: clock aliases for long AM335x device names
 0007: early timer provider dependencies
 0008: skip the unused AM335x legacy voltage initialization layer
+0009: use the existing TPS65217 parent binding for regulator/backlight children
 
 No proprietary application source or signing keys are needed to build
 the kernel. Enable meta and meta-yocto-bsp, select beaglebone-yocto and
