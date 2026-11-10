@@ -1,5 +1,5 @@
 FILESEXTRAPATHS:prepend:beaglebone-yocto := "${THISDIR}/fls/files:"
-PR:beaglebone-yocto = "r4"
+PR:beaglebone-yocto = "r5"
 
 COMPATIBLE_MACHINE:beaglebone-yocto = "beaglebone-yocto"
 KBRANCH:beaglebone-yocto = "v6.18/standard/beaglebone"
@@ -17,6 +17,7 @@ SRC_URI:append:beaglebone-yocto = " \
     file://0007-am335x-system-timer-post-init-providers.patch \
     file://0008-am335x-skip-unused-omap-voltage-layer.patch \
     file://0009-mfd-tps65217-use-parent-binding-for-legacy-children.patch \
+    file://0010-serial-8250-omap-clear-empty-rx-dma-completion.patch \
     file://fls-production.scc \
 "
 
