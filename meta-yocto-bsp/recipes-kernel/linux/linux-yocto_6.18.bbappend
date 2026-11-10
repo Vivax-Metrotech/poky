@@ -1,5 +1,5 @@
 FILESEXTRAPATHS:prepend:beaglebone-yocto := "${THISDIR}/fls/files:"
-PR:beaglebone-yocto = "r3"
+PR:beaglebone-yocto = "r4"
 
 COMPATIBLE_MACHINE:beaglebone-yocto = "beaglebone-yocto"
 KBRANCH:beaglebone-yocto = "v6.18/standard/beaglebone"
