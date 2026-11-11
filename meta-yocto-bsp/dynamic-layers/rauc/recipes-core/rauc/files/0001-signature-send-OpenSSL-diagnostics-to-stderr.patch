@@ -1,0 +1,64 @@
+From: Johan Overby <johan.overby@vxmt.com>
+Subject: [PATCH] signature: send OpenSSL diagnostics to stderr
+
+OpenSSL's error queue can contain diagnostics after successfully inspecting an
+unencrypted signed verity bundle. Printing that queue to stdout corrupts
+machine-readable `rauc info --output-format=json-2` output even when signature
+verification succeeds. Strict consumers cannot parse the result.
+
+Keep the diagnostics, but send them to stderr consistently for CMS operations.
+Do not change signature checks, error propagation or command return values.
+
+Upstream-Status: Pending
+---
+ src/signature.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/src/signature.c b/src/signature.c
+--- a/src/signature.c
++++ b/src/signature.c
+@@ -689,7 +689,7 @@ GBytes *cms_sign(GBytes *content, const gchar *certfile, const gchar *keyfile, gchar
+ 		g_message("No keyring given, skipping signature verification");
+ 	}
+ out:
+-	ERR_print_errors_fp(stdout);
++	ERR_print_errors_fp(stderr);
+ 	BIO_free_all(incontent);
+ 	BIO_free_all(outsig);
+ 	return res;
+@@ -785,7 +785,7 @@ GBytes *cms_resign(GBytes *sig, const gchar *certfile, const gchar *keyfile, gchar **
+ 	}
+ 
+ out:
+-	ERR_print_errors_fp(stdout);
++	ERR_print_errors_fp(stderr);
+ 	BIO_free_all(insig);
+ 	BIO_free_all(outsig);
+ 	return output_sig;
+@@ -1575,7 +1575,7 @@ gboolean cms_verify(GBytes *content, GBytes *sig, X509_STORE *store, CmsVerifyFlags
+ 
+ 	res = TRUE;
+ out:
+-	ERR_print_errors_fp(stdout);
++	ERR_print_errors_fp(stderr);
+ 	BIO_free_all(incontent);
+ 	BIO_free_all(insig);
+ 	BIO_free_all(outcontent);
+@@ -1799,7 +1799,7 @@ GBytes *cms_encrypt(GBytes *content, gchar **recipients, GError **error)
+ 	g_message("Encrypted for %d recipient%s", sk_X509_num(recipcerts), sk_X509_num(recipcerts) > 1 ? "s" : "");
+ 
+ out:
+-	ERR_print_errors_fp(stdout);
++	ERR_print_errors_fp(stderr);
+ 	BIO_free_all(incontent);
+ 	BIO_free_all(outsig);
+ 	return res;
+@@ -1876,7 +1876,7 @@ GBytes *cms_decrypt(GBytes *content, const gchar *certfile, const gchar *keyfile, GError
+ 		goto out;
+ 	}
+ out:
+-	ERR_print_errors_fp(stdout);
++	ERR_print_errors_fp(stderr);
+ 	BIO_free_all(inenc);
+ 	BIO_free_all(outdecrypt);
+ 	return res;
